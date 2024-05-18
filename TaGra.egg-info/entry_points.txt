@@ -1,0 +1,3 @@
+[console_scripts]
+tagra = ta_gra:main
+
