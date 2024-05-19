@@ -1,2 +1,5 @@
 # Python Venv
-.venv/
+venv/
+
+# Ignore dist
+dist/
