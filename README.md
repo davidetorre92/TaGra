@@ -16,6 +16,12 @@ To install TaGra, simply use pip:
 ```sh
 pip install tagra
 ```
+## Quickstart
+```sh
+python3 examples/examples_usage.py -c examples/example_config.json
+```
+You can edit the option in ```examples/example_config.json``` and adapt them as you wish.
+The default option will produce a prepreocessing and a graph based on the ```moons``` dataset (SciKit Learn).
 
 # Usage
 ## Data Preprocessing

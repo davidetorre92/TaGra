@@ -1,7 +1,7 @@
 import datetime
 import networkx as nx
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
+from matplotlib import cm
 import pandas as pd
 import numpy as np
 
