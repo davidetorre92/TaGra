@@ -1,7 +1,6 @@
 import datetime
 import networkx as nx
 import matplotlib.pyplot as plt
-from matplotlib import cm
 import pandas as pd
 import numpy as np
 
@@ -155,7 +154,6 @@ def plot_community_composition(G, attribute_name, outpath):
         print(f"{datetime.datetime.now()}: Community composition saved in {outpath}")
         
 def matplotlib_graph_visualization(G, attribute = None, outpath = None, palette = 'viridis', pos = None):
-    palette = 'viridis'
     plt.figure(figsize=(10, 10))
     if pos is None:
       pos = nx.spring_layout(G, seed=2112)
@@ -166,8 +164,8 @@ def matplotlib_graph_visualization(G, attribute = None, outpath = None, palette 
         y = np.array([G.nodes[node][classification_attribute_name] for node in G.nodes()])
         unique = np.unique(y)
         unique_dict = {key: index for index, key in enumerate(unique)}
-        colrs = colors = np.linspace(0, 1, len(unique))
-        cmap = cm.get_cmap(palette, len(unique))
+        colors = np.linspace(0, 1, len(unique))
+        cmap = plt.get_cmap(palette, len(unique))
         color_array = cmap(colors)
         node_color = [color_array[unique_dict[key]] for key in y]
     nx.draw(G, pos, with_labels=True, node_size=50, font_size=8, node_color = node_color)
