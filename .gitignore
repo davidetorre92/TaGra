@@ -3,3 +3,6 @@ venv/
 
 # Ignore dist
 dist/
+
+# Ignore experiments results
+results/
