@@ -160,6 +160,25 @@ def preprocess_dataframe(input_dataframe=None,
                     if verbose:
                         print(f"{datetime.datetime.now()}: Column '{col}' added to categorical columns by unique ratio inference.")
 
+    print(f"--------------------------\nDataframe short report\n--------------------------\n\n")
+    print(f"{df.shape[0]} rows and {df.shape[1]} columns")
+    print(f"column list: {list(df.columns)}")
+    print(f"nans:\n{df.isna().sum()}")
+
+    # Set target columns to be only one colum
+    target_col_name = tuple(target_cols) if len(target_cols) > 1 else (target_cols[0] if len(target_cols) == 1 else '')
+    if len(target_cols) > 1:
+        df[target_col_name] = df[target_cols].apply(tuple, axis=1)
+        df = df.drop(columns=target_cols)
+    
+    if len(target_cols) != 0:
+        unique_targets = np.unique(df[target_col_name].values)
+        N_col = df.shape[0]
+        print(f"Target class proportions")
+        for target in unique_targets:
+            n_target = df[df[target_col_name] == target].shape[0]
+            print(f"\t{target}: {n_target / N_col * 100}%")
+    print(f"--------------------------\nEnd of the report.")
     # NaNs
     if nan_action == 'drop row':
         df.dropna(inplace=True)
@@ -210,11 +229,6 @@ def preprocess_dataframe(input_dataframe=None,
         if verbose:
             print(f"{datetime.datetime.now()}: Applied {manifold_method} manifold learning.")
 
-
-    # Set target columns to be only one colum
-    if len(target_cols) > 1:
-        df[tuple(target_cols)] = df[target_cols].apply(tuple, axis=1)
-        df = df.drop(columns=target_cols)
 
     # Save
     if output_path.endswith('.pickle'):
