@@ -13,11 +13,11 @@ def preprocess_dataframe(input_dataframe=None,
                          target_cols=[], 
                          unknown_col_action='infer',
                          ignore_cols=[], 
-                         threshold=0.05,
+                         numeric_threshold=0.05,
                          numeric_scaling='standard', 
                          categorical_encoding='one-hot',
                          nan_action='infer', 
-                         nan_threshold=1,
+                         nan_threshold=0.5,
                          verbose=True, 
                          manifold_method=None, 
                          manifold_dim=2):
@@ -28,7 +28,7 @@ def preprocess_dataframe(input_dataframe=None,
               f"\tinput_path: {input_dataframe}, output_directory: {output_directory}, preprocessed_filename: {preprocessed_filename}\n"
               f"\tnumeric_cols: {numeric_cols}, categorical_cols: {categorical_cols}, target_cols: {target_cols}, \n"
               f"\tunknown_col_action: {unknown_col_action}, ignore_cols: {ignore_cols}, \n"
-              f"\tthreshold: {threshold}, numeric_scaling: {numeric_scaling}, \n"
+              f"\tnumeric_threshold: {numeric_threshold}, numeric_scaling: {numeric_scaling}, \n"
               f"\tcategorical_encoding: {categorical_encoding}, nan_action: {nan_action}, \n"
               f"\tnan_threshold: {nan_threshold}, verbose: {verbose}, \n"
               f"\tmanifold_method: {manifold_method}, manifold_dim: {manifold_dim}\n\n")
@@ -135,31 +135,34 @@ def preprocess_dataframe(input_dataframe=None,
     # Targets should not be preprocessed
     ignore_cols += target_cols
     # Unknown columns inference
-    for col in df.columns:
-        if col not in numeric_cols and col not in categorical_cols and col not in ignore_cols:
-            if df[col].dtype in [np.float64, np.float32, np.int64, np.int32]:
-                numeric_cols.append(col)
-                if verbose:
-                    print(f"{datetime.datetime.now()}: Column '{col}' added to numeric columns by inference.")
-            elif df[col].dtype == 'bool' or np.issubdtype(df[col].dtype, np.datetime64):
-                ignore_cols.append(col)
-                if verbose:
-                    print(f"{datetime.datetime.now()}: Column '{col}' added to ignored columns by inference.")
-            elif df[col].dtype == 'object':
-                categorical_cols.append(col)
-                if verbose:
-                    print(f"{datetime.datetime.now()}: Column '{col}' added to categorical column columns by inference.")      
-            else:
-                unique_ratio = len(df[col].unique()) / len(df[col])
-                if unique_ratio > threshold:
+    if unknown_col_action == 'infer':
+        for col in df.columns:
+            if col not in numeric_cols and col not in categorical_cols and col not in ignore_cols:
+                if df[col].dtype in [np.float64, np.float32, np.int64, np.int32]:
                     numeric_cols.append(col)
                     if verbose:
-                        print(f"{datetime.datetime.now()}: Column '{col}' added to numeric columns by unique ratio inference.")
-                else:
+                        print(f"{datetime.datetime.now()}: Column '{col}' added to numeric columns by inference.")
+                elif df[col].dtype == 'bool' or np.issubdtype(df[col].dtype, np.datetime64):
+                    ignore_cols.append(col)
+                    if verbose:
+                        print(f"{datetime.datetime.now()}: Column '{col}' added to ignored columns by inference.")
+                elif df[col].dtype == 'object':
                     categorical_cols.append(col)
                     if verbose:
-                        print(f"{datetime.datetime.now()}: Column '{col}' added to categorical columns by unique ratio inference.")
-
+                        print(f"{datetime.datetime.now()}: Column '{col}' added to categorical column columns by inference.")      
+                else:
+                    unique_ratio = len(df[col].unique()) / len(df[col])
+                    if unique_ratio > numeric_threshold:
+                        numeric_cols.append(col)
+                        if verbose:
+                            print(f"{datetime.datetime.now()}: Column '{col}' added to numeric columns by unique ratio inference.")
+                    else:
+                        categorical_cols.append(col)
+                        if verbose:
+                            print(f"{datetime.datetime.now()}: Column '{col}' added to categorical columns by unique ratio inference.")
+    elif unknown_col_action == 'ignore':
+        ignore_cols += [col for col in df.columns if col not in numeric_cols and col not in categorical_cols and col not in ignore_cols]
+    else: raise ValueError(f"unknown_col_action {unknown_col_action} not supported. Aborting...")
     print(f"--------------------------\nDataframe short report\n--------------------------\n\n")
     print(f"{df.shape[0]} rows and {df.shape[1]} columns")
     print(f"column list: {list(df.columns)}")

@@ -2,7 +2,7 @@ import json
 import os
 import sys
 import argparse
-import pickle
+from datetime import datetime
 import pandas as pd
 from tagra.preprocessing import preprocess_dataframe
 from tagra.graph import create_graph
@@ -10,6 +10,8 @@ from tagra.analysis import analyze_graph
 from tagra.config import *
 
 def main(config_path):
+    start_time = datetime.now()
+
     config = load_config(config_path)
     # Preprocessing
     df_preprocessed = preprocess_dataframe(
@@ -21,7 +23,7 @@ def main(config_path):
         target_cols=config['target_columns'],
         unknown_col_action=config['unknown_column_action'],
         ignore_cols=config['ignore_columns'],
-        threshold=config['numeric_threshold'],
+        numeric_threshold=config['numeric_threshold'],
         numeric_scaling=config['numeric_scaling'],
         categorical_encoding=config['categorical_encoding'],
         nan_action=config['nan_action'],
@@ -38,7 +40,8 @@ def main(config_path):
         output_directory=config['output_directory'],
         graph_filename=config['graph_filename'],
         preprocessed_dataframe=df_preprocessed,
-        
+        similarity_threshold=config['similarity_threshold'],
+        distance_threshold=config['distance_threshold'],
         method=config['method'],
         k=config['k'],
         threshold=config['threshold'],
@@ -60,7 +63,9 @@ def main(config_path):
         prob_heatmap_filename=config['prob_heatmap_filename'],
     )
 
-    print("Analysis complete.")
+    end_time = datetime.now()
+    
+    print(f"Analysis complete. Execution time: {end_time - start_time}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run TaGra example with configuration file.')

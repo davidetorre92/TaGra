@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-def analyze_neighborhood_attributes(graph, attribute_name, return_probs=False):
+def analyze_neighborhood_attributes(graph, target_attribute, return_probs=False):
     """
     Analyzes attributes in the neighborhoods of each node in a graph, optionally returning probabilities.
 
@@ -17,14 +17,15 @@ def analyze_neighborhood_attributes(graph, attribute_name, return_probs=False):
     - pd.DataFrame: A DataFrame with each row representing a node. Columns include the node's attribute,
                     degree, and either the count or probability of each attribute in its neighborhood.
     """
-    unique_attributes = set(nx.get_node_attributes(graph, attribute_name).values())
+    
+    unique_attributes = set(nx.get_node_attributes(graph, target_attribute).values())
     data = []
     for node in graph.nodes:
         neighbors = list(graph.neighbors(node))
-        neighbor_attrs = [graph.nodes[n].get(attribute_name, None) for n in neighbors]
+        neighbor_attrs = [graph.nodes[n].get(target_attribute, None) for n in neighbors]
 
         attr_counts = {}
-        attr_counts[f"node_{attribute_name}"] = graph.nodes[node].get(attribute_name, None)
+        attr_counts[f"node_{target_attribute}"] = graph.nodes[node].get(target_attribute, None)
         attr_counts["node_index"] = node
         attr_counts["degree"] = len(neighbors)
 
@@ -36,7 +37,7 @@ def analyze_neighborhood_attributes(graph, attribute_name, return_probs=False):
 
         data.append(attr_counts)
 
-    cols = ["node_index", f"node_{attribute_name}", "degree"] + \
+    cols = ["node_index", f"node_{target_attribute}", "degree"] + \
            [f"{'p' if return_probs else 'n'}_{attr}" for attr in unique_attributes]
     df = pd.DataFrame(data, columns=cols)
 
@@ -174,8 +175,7 @@ def matplotlib_graph_visualization(G, attribute = None, outpath = None, palette 
         print(f'{datetime.datetime.now()}: Graph saved in {outpath}')
 
 def measure_mixing_matrix(G, communities):
-    N_communities = len(communities.keys())
-    community_edge_count = np.zeros((N_communities, N_communities))
+    community_edge_count = {(i, j): 0 for i in communities.keys() for j in communities.keys()}
 
     # Create a mapping from node to its community
     node_to_community = {}

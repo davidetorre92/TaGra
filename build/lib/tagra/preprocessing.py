@@ -5,24 +5,50 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder, LabelEncoder
 from sklearn.manifold import Isomap
 
-def preprocess_dataframe(input_dataframe=None, output_path=None, 
-                         numeric_cols=[], categorical_cols=[], 
-                         unknown_col_action='infer', ignore_cols=[], 
-                         threshold=0.05, numeric_scaling='standard', 
-                         categorical_encoding='one-hot', nan_action='infer', 
-                         nan_threshold=1, verbose=True, 
-                         manifold_method=None, manifold_dim=2):
+def preprocess_dataframe(input_dataframe=None, 
+                         output_directory=None, 
+                         preprocessed_filename=None, 
+                         numeric_cols=[],
+                         categorical_cols=[], 
+                         target_cols=[], 
+                         unknown_col_action='infer',
+                         ignore_cols=[], 
+                         threshold=0.05,
+                         numeric_scaling='standard', 
+                         categorical_encoding='one-hot',
+                         nan_action='infer', 
+                         nan_threshold=1,
+                         verbose=True, 
+                         manifold_method=None, 
+                         manifold_dim=2):
 
     if verbose:
         print(f"--------------------------\nPreprocessing options\n--------------------------\n\n"
               f"\tOptions:\n"
-              f"\tinput_path: {input_dataframe}, output_path: {output_path}, \n"
-              f"\tnumeric_cols: {numeric_cols}, categorical_cols: {categorical_cols}, \n"
+              f"\tinput_path: {input_dataframe}, output_directory: {output_directory}, preprocessed_filename: {preprocessed_filename}\n"
+              f"\tnumeric_cols: {numeric_cols}, categorical_cols: {categorical_cols}, target_cols: {target_cols}, \n"
               f"\tunknown_col_action: {unknown_col_action}, ignore_cols: {ignore_cols}, \n"
               f"\tthreshold: {threshold}, numeric_scaling: {numeric_scaling}, \n"
               f"\tcategorical_encoding: {categorical_encoding}, nan_action: {nan_action}, \n"
               f"\tnan_threshold: {nan_threshold}, verbose: {verbose}, \n"
               f"\tmanifold_method: {manifold_method}, manifold_dim: {manifold_dim}\n\n")
+
+    # Output path managing
+    if output_directory is None:
+        output_directory = './'
+    if os.path.exists(output_directory) is False:
+        os.mkdir(output_directory)
+        print(f"{datetime.datetime.now()}: Output directory created: {output_directory}.")
+    if preprocessed_filename is None:
+        if isinstance(input_dataframe, str):
+            basename = os.path.basename(input_dataframe)
+            base, ext = os.path.splitext(basename)
+            preprocessed_filename = f"{base}_preprocessed_{datetime.datetime.now().strftime('%Y%m%d%H%M')}{ext}"
+        else:
+            preprocessed_filename = f"preprocessed_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.pickle"
+    
+    output_path = os.path.join(output_directory, preprocessed_filename)
+    print(f"{datetime.datetime.now()}: Output path for the preprocessed file: {output_path}.")
 
     # Load dataframe
     if isinstance(input_dataframe, str):
@@ -53,6 +79,61 @@ def preprocess_dataframe(input_dataframe=None, output_path=None,
     else:
         raise ValueError("Invalid input_path. Must be a path to a file or a pandas DataFrame.")
 
+    # Checking columns
+    ## Checking target_cols
+    if target_cols is not None:
+        if type(target_cols) != list:
+            if target_cols in df.columns is False:
+                raise ValueError(f"Target column {target_cols} not found.") 
+            target_cols = [target_cols] # We need them to be lists. 
+        else:
+            for target_col in target_cols:
+                if target_col in df.columns is False:
+                    raise ValueError(f"Target column {target_col} not found.") 
+    else:
+        target_cols = []
+
+    ## Checking numeric_cols
+    if numeric_cols is not None:
+        if type(numeric_cols) != list:
+            if numeric_cols in df.columns is False:
+                raise ValueError(f"Numeric column {numeric_cols} not found.") 
+            numeric_cols = [numeric_cols] # We need them to be lists. 
+        else:
+            for numeric_col in numeric_cols:
+                if numeric_col in df.columns is False:
+                    raise ValueError(f"Numeric column {numeric_col} not found.") 
+    else:
+        numeric_cols = []
+
+    ## Checking categorical_cols
+    if categorical_cols is not None:
+        if type(categorical_cols) != list:
+            if categorical_cols in df.columns is False:
+                raise ValueError(f"Categorical column {categorical_cols} not found.") 
+            categorical_cols = [categorical_cols] # We need them to be lists. 
+        else:
+            for categorical_col in categorical_cols:
+                if categorical_col in df.columns is False:
+                    raise ValueError(f"Categorical column {categorical_col} not found.") 
+    else:
+        categorical_cols = []
+
+    ## Checking ignore_cols
+    if ignore_cols is not None:
+        if type(ignore_cols) != list:
+            if ignore_cols in df.columns is False:
+                raise ValueError(f"Ignore column {ignore_cols} not found.") 
+            ignore_cols = [ignore_cols] # We need them to be lists. 
+        else:
+            for ignore_col in ignore_cols:
+                if ignore_col in df.columns is False:
+                    raise ValueError(f"Ignore column {ignore_col} not found.") 
+    else:
+        ignore_cols = []
+
+    # Targets should not be preprocessed
+    ignore_cols += target_cols
     # Unknown columns inference
     for col in df.columns:
         if col not in numeric_cols and col not in categorical_cols and col not in ignore_cols:
@@ -79,6 +160,25 @@ def preprocess_dataframe(input_dataframe=None, output_path=None,
                     if verbose:
                         print(f"{datetime.datetime.now()}: Column '{col}' added to categorical columns by unique ratio inference.")
 
+    print(f"--------------------------\nDataframe short report\n--------------------------\n\n")
+    print(f"{df.shape[0]} rows and {df.shape[1]} columns")
+    print(f"column list: {list(df.columns)}")
+    print(f"nans:\n{df.isna().sum()}")
+
+    # Set target columns to be only one colum
+    target_col_name = tuple(target_cols) if len(target_cols) > 1 else (target_cols[0] if len(target_cols) == 1 else '')
+    if len(target_cols) > 1:
+        df[target_col_name] = df[target_cols].apply(tuple, axis=1)
+        df = df.drop(columns=target_cols)
+    
+    if len(target_cols) != 0:
+        unique_targets = np.unique(df[target_col_name].values)
+        N_col = df.shape[0]
+        print(f"Target class proportions")
+        for target in unique_targets:
+            n_target = df[df[target_col_name] == target].shape[0]
+            print(f"\t{target}: {n_target / N_col * 100}%")
+    print(f"--------------------------\nEnd of the report.")
     # NaNs
     if nan_action == 'drop row':
         df.dropna(inplace=True)
@@ -129,13 +229,6 @@ def preprocess_dataframe(input_dataframe=None, output_path=None,
         if verbose:
             print(f"{datetime.datetime.now()}: Applied {manifold_method} manifold learning.")
 
-    # Output path managing
-    if output_path is None:
-        if isinstance(input_dataframe, str):
-            base, ext = os.path.splitext(input_dataframe)
-            output_path = f"{base}_preprocessed_{datetime.datetime.now().strftime('%Y%m%d%H%M')}{ext}"
-        else:
-            output_path = f"./preprocessed_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.pickle"
 
     # Save
     if output_path.endswith('.pickle'):

@@ -7,12 +7,29 @@ import networkx as nx
 from scipy.spatial.distance import pdist, squareform
 from sklearn.metrics.pairwise import cosine_similarity
 
-def create_graph(input_dataframe=None, preprocessed_dataframe=None, output_path=None, method='knn', threshold=0.75, k=5, verbose=True):
+def create_graph(input_dataframe=None, preprocessed_dataframe=None, output_directory=None, graph_filename=None, method='knn', threshold=0.75, k=5, verbose=True):
     if verbose:
         print(f"--------------------------\nGraph creation options\n--------------------------\n\n"
               f"\tOptions:\n"
-              f"\input_dataframe: {input_dataframe}, preprocessed_dataframe: {preprocessed_dataframe}, \n"
-              f"\toutput_path: {output_path}, method: {method}, threshold: {threshold}, k: {k}, verbose: {verbose}\n\n")
+              f"\input_dataframe: {input_dataframe}, preprocessed_dataframe: {preprocessed_dataframe}\n"
+              f"\output_directory: {output_directory}, graph_filename: {graph_filename},\nmethod: {method}, threshold: {threshold}, k: {k}, verbose: {verbose}\n\n")
+
+    # Output path managing
+    if output_directory is None:
+        output_directory = './'
+    if os.path.exists(output_directory) is False:
+        os.mkdir(output_directory)
+        print(f"{datetime.datetime.now()}: Output directory created: {output_directory}.")
+    if graph_filename is None:
+        if isinstance(input_dataframe, str):
+            basename = os.path.basename(input_dataframe)
+            base, ext = os.path.splitext(basename)
+            graph_filename = f"{base}_preprocessed_{datetime.datetime.now().strftime('%Y%m%d%H%M')}{ext}"
+        else:
+            graph_filename = f"preprocessed_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.pickle"
+    
+    output_path = os.path.join(output_directory, graph_filename)
+    print(f"{datetime.datetime.now()}: Output path for the preprocessed file: {output_path}.")
 
     # Load dataframe
     if isinstance(input_dataframe, str):
@@ -69,13 +86,6 @@ def create_graph(input_dataframe=None, preprocessed_dataframe=None, output_path=
                     G.add_edge(i, j)
     else:
         raise ValueError(f"Unsupported method: {method}")
-
-    if output_path is None:
-        if isinstance(input_dataframe, str):
-            base, _ = os.path.splitext(input_dataframe)
-            output_path = f"{base}_graph_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.pickle"
-        else:
-            output_path = f"./graph_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.pickle"
 
     pickle.dump(G, open(output_path, 'wb'))
     if verbose:
