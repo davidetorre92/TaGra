@@ -1,8 +1,11 @@
 {
     "input_dataframe": "examples/moons.csv",
-    "output_path": null,
+    "output_directory": "results/", 
+    "preprocessed_filename": null,
+    "graph_filename": null,
     "numeric_columns": ["feature_1", "feature_2"],
-    "categorical_columns": ["class"],
+    "categorical_columns": null,
+    "target_columns": "class",
     "unknown_column_action": "ignore",
     "ignore_columns": [],
     "numeric_threshold": 0.05,
@@ -18,10 +21,10 @@
     "k": 5,
     "clustering_method": "hierarchical",
     "inconsistency_threshold": 0.1,
-    "neigh_prob_path": null,
-    "degree_distribution_outpath": "degree.png",
-    "betweenness_distribution_outpath": null,
-    "community_composition_outpath": "communities.png",
-    "graph_visualization_path": "graph.png",
-    "plot_graph": true
+    "neigh_prob_path": "neigh_prob.txt",
+    "degree_distribution_filename": "degree.png",
+    "betweenness_distribution_filename": "betweeness.png",
+    "community_composition_filename": "communities.png",
+    "graph_visualization_filename": "graph.png",
+    "prob_heatmap_filename": "neigh_prob_heatmap.png"
 }

@@ -14,9 +14,11 @@ def main(config_path):
     # Preprocessing
     df_preprocessed = preprocess_dataframe(
         input_dataframe=config['input_dataframe'],
-        output_path=config['output_path'],
+        output_directory=config['output_directory'],
+        preprocessed_filename=config['preprocessed_filename'],
         numeric_cols=config['numeric_columns'],
         categorical_cols=config['categorical_columns'],
+        target_cols=config['target_columns'],
         unknown_col_action=config['unknown_column_action'],
         ignore_cols=config['ignore_columns'],
         threshold=config['numeric_threshold'],
@@ -29,36 +31,33 @@ def main(config_path):
         manifold_dim=config['manifold_dimension']
     )
 
-    # Save preprocessed file
-    preprocessed_path = 'preprocessed_moons.csv'
-    df_preprocessed.to_csv(preprocessed_path, index=False)
-
+    
     # Graph Creation
     graph = create_graph(
         input_dataframe=config['input_dataframe'],
+        output_directory=config['output_directory'],
+        graph_filename=config['graph_filename'],
         preprocessed_dataframe=df_preprocessed,
+        
         method=config['method'],
         k=config['k'],
         threshold=config['threshold'],
         verbose=config['verbose']
     )
 
-    # Salva il grafo
-    graph_path = 'moons_graph.pickle'
-    pickle.dump(graph, open(graph_path, 'wb'))
-
     # Graph Analysis
     analyze_graph(
-        graph_path=graph_path,
-        attribute='class',
+        graph,
+        target_attributes=config['target_columns'],
         clustering_method=config['clustering_method'],
         inconsistency_threshold=config['inconsistency_threshold'],
         verbose=config['verbose'],
-        degree_distribution_outpath=config['degree_distribution_outpath'],
-        betweenness_distribution_outpath=config['betweenness_distribution_outpath'],
-        community_composition_outpath=config['community_composition_outpath'],
-        graph_visualization_path=config['graph_visualization_path'],
-        plot_graph=config['plot_graph']
+        output_directory=config['output_directory'],
+        degree_distribution_filename=config['degree_distribution_filename'],
+        betweenness_distribution_filename=config['betweenness_distribution_filename'],
+        community_composition_filename=config['community_composition_filename'],
+        graph_visualization_filename=config['graph_visualization_filename'],
+        prob_heatmap_filename=config['prob_heatmap_filename'],
     )
 
     print("Analysis complete.")

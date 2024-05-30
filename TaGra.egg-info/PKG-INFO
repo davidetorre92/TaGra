@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: TaGra
-Version: 0.1.1
+Version: 0.1.8
 Summary: TaGra: TAbular data preprocessing to GRAph representation.
 Home-page: https://github.com/davidetorre92/TaGra
 Author: Davide Torre, Davide Chicco
@@ -30,8 +30,14 @@ TaGra is a comprehensive Python library designed to simplify the preprocessing o
 To install TaGra, simply use pip:
 
 ```sh
-pip install ta_gra
+pip install tagra
 ```
+## Quickstart
+```sh
+python3 examples/examples_usage.py -c examples/example_config.json
+```
+You can edit the option in ```examples/example_config.json``` and adapt them as you wish.
+The default option will produce a prepreocessing and a graph based on the ```moons``` dataset (SciKit Learn).
 
 # Usage
 ## Data Preprocessing
