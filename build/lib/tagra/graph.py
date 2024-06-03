@@ -7,12 +7,15 @@ import networkx as nx
 from scipy.spatial.distance import pdist, squareform
 from sklearn.metrics.pairwise import cosine_similarity
 
-def create_graph(input_dataframe=None, preprocessed_dataframe=None, output_directory=None, graph_filename=None, method='knn', threshold=0.75, k=5, verbose=True):
+def create_graph(input_dataframe=None, preprocessed_dataframe=None,
+                 output_directory=None, graph_filename=None, method='knn',
+                 distance_threshold=0.75,
+                 similarity_threshold = 0.95, k=5, verbose=True):
     if verbose:
         print(f"--------------------------\nGraph creation options\n--------------------------\n\n"
               f"\tOptions:\n"
               f"\input_dataframe: {input_dataframe}, preprocessed_dataframe: {preprocessed_dataframe}\n"
-              f"\output_directory: {output_directory}, graph_filename: {graph_filename},\nmethod: {method}, threshold: {threshold}, k: {k}, verbose: {verbose}\n\n")
+              f"\output_directory: {output_directory}, graph_filename: {graph_filename},\nmethod: {method}, distance_threshold: {distance_threshold}, similarity_threshold: {similarity_threshold}, k: {k}, verbose: {verbose}\n\n")
 
     # Output path managing
     if output_directory is None:
@@ -24,9 +27,9 @@ def create_graph(input_dataframe=None, preprocessed_dataframe=None, output_direc
         if isinstance(input_dataframe, str):
             basename = os.path.basename(input_dataframe)
             base, ext = os.path.splitext(basename)
-            graph_filename = f"{base}_preprocessed_{datetime.datetime.now().strftime('%Y%m%d%H%M')}{ext}"
+            graph_filename = f"{base}_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.graphml"
         else:
-            graph_filename = f"preprocessed_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.pickle"
+            graph_filename = f"graph_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.pickle"
     
     output_path = os.path.join(output_directory, graph_filename)
     print(f"{datetime.datetime.now()}: Output path for the preprocessed file: {output_path}.")
@@ -74,7 +77,7 @@ def create_graph(input_dataframe=None, preprocessed_dataframe=None, output_direc
         dists = squareform(pdist(values, metric='euclidean'))
         for i in range(len(df)):
             for j in range(i + 1, len(df)):
-                if dists[i, j] <= threshold:
+                if dists[i, j] <= distance_threshold:
                     G.add_edge(i, j)
     elif method == 'similarity':
         numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
@@ -82,7 +85,7 @@ def create_graph(input_dataframe=None, preprocessed_dataframe=None, output_direc
         sim_matrix = cosine_similarity(values)
         for i in range(len(df)):
             for j in range(i + 1, len(df)):
-                if sim_matrix[i, j] >= threshold:
+                if sim_matrix[i, j] >= similarity_threshold:
                     G.add_edge(i, j)
     else:
         raise ValueError(f"Unsupported method: {method}")
