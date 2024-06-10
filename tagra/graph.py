@@ -10,7 +10,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 def create_graph(input_dataframe=None, preprocessed_dataframe=None,
                  output_directory=None, graph_filename=None, method='knn',
                  distance_threshold=0.75,
-                 similarity_threshold = 0.95, k=5, verbose=True):
+                 similarity_threshold=0.95, k=5, verbose=True):
     if verbose:
         print(f"--------------------------\nGraph creation options\n--------------------------\n\n"
               f"\tOptions:\n"

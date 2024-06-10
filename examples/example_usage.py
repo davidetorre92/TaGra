@@ -29,7 +29,7 @@ def main(config_path):
         nan_action=config['nan_action'],
         nan_threshold=config['nan_threshold'],
         verbose=config['verbose'],
-        manifold_method=config['manifold_learning'],
+        manifold_method=config['manifold_method'],
         manifold_dim=config['manifold_dimension']
     )
 
@@ -44,7 +44,6 @@ def main(config_path):
         distance_threshold=config['distance_threshold'],
         method=config['method'],
         k=config['k'],
-        threshold=config['threshold'],
         verbose=config['verbose']
     )
 
