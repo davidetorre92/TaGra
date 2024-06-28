@@ -2,18 +2,35 @@ import json
 import os
 
 default_config = {
-    "nan_action": "infer",
-    "nan_threshold": 0.6,
+    "input_dataframe": "examples/moons.csv",
+    "output_directory": "results/", 
+    "preprocessed_filename": None,
+    "graph_filename": None,
+    "numeric_columns": ["feature_1", "feature_2"],
+    "categorical_columns": None,
+    "target_columns": "class",
+    "unknown_column_action": "ignore",
+    "ignore_columns": [],
+    "numeric_threshold": 0.05,
     "numeric_scaling": "standard",
     "categorical_encoding": "one-hot",
-    "manifold_method": None,
-    "manifold_dim": 2,
+    "nan_action": "infer",
+    "nan_threshold": 0.6,
     "verbose": True,
+    "manifold_method": None,
+    "manifold_dimension": 2,
     "method": "knn",
-    "threshold": 0.75,
     "k": 5,
+    "distance_threshold": 0.75,
+    "similarity_threshold": 0.95,
     "clustering_method": "hierarchical",
-    "inconsistency_threshold": 0.1
+    "inconsistency_threshold": 0.1,
+    "neigh_prob_path": "neigh_prob.txt",
+    "degree_distribution_filename": "degree.png",
+    "betweenness_distribution_filename": "betweeness.png",
+    "community_composition_filename": "communities.png",
+    "graph_visualization_filename": "graph.png",
+    "prob_heatmap_filename": "neigh_prob_heatmap.png"
 }
 
 def load_config(config_path="config.json"):
@@ -22,6 +39,14 @@ def load_config(config_path="config.json"):
         if os.path.exists(config_path):
             with open(config_path, 'r') as f:
                 config = json.load(f)
+            if config.get("verbose", None) is None:
+                config['verbose'] = default_config['verbose']
+                print(f"Using default value for 'verbose': {default_config['verbose']}")
+            for key in default_config:
+                if key not in config:
+                    config[key] = default_config[key]
+                    if config['verbose']:
+                        print(f"Using default value for {key}: {default_config[key]}")
             if config["verbose"]:
                 print(f"Loaded configuration from {config_path}.")
             return config
