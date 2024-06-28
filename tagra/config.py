@@ -2,7 +2,6 @@ import json
 import os
 
 default_config = {
-    "input_dataframe": "examples/moons.csv",
     "output_directory": "results/", 
     "preprocessed_filename": None,
     "graph_filename": None,
