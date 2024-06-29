@@ -18,11 +18,12 @@ def main(config_path):
         input_dataframe=config['input_dataframe'],
         output_directory=config['output_directory'],
         preprocessed_filename=config['preprocessed_filename'],
-        numeric_cols=config['numeric_columns'],
-        categorical_cols=config['categorical_columns'],
-        target_cols=config['target_columns'],
-        unknown_col_action=config['unknown_column_action'],
-        ignore_cols=config['ignore_columns'],
+        inferred_columns_filename=config['inferred_columns_filename'],
+        numeric_columns=config['numeric_columns'],
+        categorical_columns=config['categorical_columns'],
+        target_columns=config['target_columns'],
+        unknown_column_action=config['unknown_column_action'],
+        ignore_columns=config['ignore_columns'],
         numeric_threshold=config['numeric_threshold'],
         numeric_scaling=config['numeric_scaling'],
         categorical_encoding=config['categorical_encoding'],
@@ -33,12 +34,13 @@ def main(config_path):
         manifold_dim=config['manifold_dimension']
     )
 
-    
     # Graph Creation
     graph = create_graph(
         input_dataframe=config['input_dataframe'],
         output_directory=config['output_directory'],
         graph_filename=config['graph_filename'],
+        inferred_columns_filename=config['inferred_columns_filename'],
+        numeric_columns=config['numeric_columns'],
         preprocessed_dataframe=df_preprocessed,
         similarity_threshold=config['similarity_threshold'],
         distance_threshold=config['distance_threshold'],
@@ -46,6 +48,7 @@ def main(config_path):
         k=config['k'],
         verbose=config['verbose']
     )
+    exit()
 
     # Graph Analysis
     analyze_graph(

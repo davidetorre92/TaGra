@@ -2,6 +2,7 @@
     "input_dataframe": "examples/moons.csv",
     "output_directory": "results/", 
     "preprocessed_filename": null,
+    "inferred_columns_filename": "inferred_columns.pickle",
     "graph_filename": null,
     "numeric_columns": ["feature_1", "feature_2"],
     "categorical_columns": null,

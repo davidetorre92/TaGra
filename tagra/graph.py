@@ -8,6 +8,7 @@ from scipy.spatial.distance import pdist, squareform
 from sklearn.metrics.pairwise import cosine_similarity
 
 def create_graph(input_dataframe=None, preprocessed_dataframe=None,
+                 inferred_columns_filename=None, numeric_columns=None,
                  output_directory=None, graph_filename=None, method='knn',
                  distance_threshold=0.75,
                  similarity_threshold=0.95, k=5, verbose=True):
@@ -31,6 +32,10 @@ def create_graph(input_dataframe=None, preprocessed_dataframe=None,
         else:
             graph_filename = f"graph_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.pickle"
     
+    if inferred_columns_filename is not None:
+        inferred_columns_dictionary_path = os.path.join(output_directory, inferred_columns_filename)
+        inferred_columns_dictionary = pickle.load(open(inferred_columns_dictionary_path, 'rb'))
+        numerical_columns = inferred_columns_dictionary['numeric_columns']
     output_path = os.path.join(output_directory, graph_filename)
     print(f"{datetime.datetime.now()}: Output path for the preprocessed file: {output_path}.")
 
@@ -62,9 +67,13 @@ def create_graph(input_dataframe=None, preprocessed_dataframe=None,
     for i, row in df.iterrows():
         G.add_node(i, **row.to_dict())
 
-    if method == 'knn':
+    if numerical_columns is None:
         numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
         values = df_preprocessed.select_dtypes(include=numerics).values
+    else:
+        values = df_preprocessed[numerical_columns].values
+
+    if method == 'knn':
         dists = squareform(pdist(values, metric='euclidean'))
         for i in range(len(df)):
             knn_indices = np.argsort(dists[i])[:k + 1]
@@ -72,16 +81,12 @@ def create_graph(input_dataframe=None, preprocessed_dataframe=None,
                 if i != j:
                     G.add_edge(i, j)
     elif method == 'distance_threshold':
-        numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
-        values = df_preprocessed.select_dtypes(include=numerics).values
         dists = squareform(pdist(values, metric='euclidean'))
         for i in range(len(df)):
             for j in range(i + 1, len(df)):
                 if dists[i, j] <= distance_threshold:
                     G.add_edge(i, j)
     elif method == 'similarity':
-        numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
-        values = df_preprocessed.select_dtypes(include=numerics).values
         sim_matrix = cosine_similarity(values)
         for i in range(len(df)):
             for j in range(i + 1, len(df)):
