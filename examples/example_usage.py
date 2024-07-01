@@ -31,7 +31,8 @@ def main(config_path):
         nan_threshold=config['nan_threshold'],
         verbose=config['verbose'],
         manifold_method=config['manifold_method'],
-        manifold_dim=config['manifold_dimension']
+        manifold_dim=config['manifold_dimension'],
+        overwrite=config['overwrite']
     )
 
     # Graph Creation
@@ -46,9 +47,9 @@ def main(config_path):
         distance_threshold=config['distance_threshold'],
         method=config['method'],
         k=config['k'],
-        verbose=config['verbose']
+        verbose=config['verbose'],
+        overwrite=config['overwrite']
     )
-    exit()
 
     # Graph Analysis
     analyze_graph(
@@ -63,6 +64,7 @@ def main(config_path):
         community_composition_filename=config['community_composition_filename'],
         graph_visualization_filename=config['graph_visualization_filename'],
         prob_heatmap_filename=config['prob_heatmap_filename'],
+        overwrite=config['overwrite']
     )
 
     end_time = datetime.now()

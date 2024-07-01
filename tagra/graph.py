@@ -11,12 +11,13 @@ def create_graph(input_dataframe=None, preprocessed_dataframe=None,
                  inferred_columns_filename=None, numeric_columns=None,
                  output_directory=None, graph_filename=None, method='knn',
                  distance_threshold=0.75,
-                 similarity_threshold=0.95, k=5, verbose=True):
+                 similarity_threshold=0.95, k=5, verbose=True, overwrite=False):
     if verbose:
         print(f"--------------------------\nGraph creation options\n--------------------------\n\n"
               f"\tOptions:\n"
-              f"\input_dataframe: {input_dataframe}, preprocessed_dataframe: {preprocessed_dataframe}\n"
-              f"\output_directory: {output_directory}, graph_filename: {graph_filename},\nmethod: {method}, distance_threshold: {distance_threshold}, similarity_threshold: {similarity_threshold}, k: {k}, verbose: {verbose}\n\n")
+              f"\tinput_dataframe: {input_dataframe}, preprocessed_dataframe: {preprocessed_dataframe}\n"
+              f"\toutput_directory: {output_directory}, graph_filename: {graph_filename},\nmethod: {method}, distance_threshold: {distance_threshold}, similarity_threshold: {similarity_threshold}, k: {k}, verbose: {verbose}\n"
+              f"\toverwrite: {overwrite}\n")
 
     # Output path managing
     if output_directory is None:
@@ -27,11 +28,28 @@ def create_graph(input_dataframe=None, preprocessed_dataframe=None,
     if graph_filename is None:
         if isinstance(input_dataframe, str):
             basename = os.path.basename(input_dataframe)
-            base, ext = os.path.splitext(basename)
-            graph_filename = f"{base}_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.graphml"
+            base, _ = os.path.splitext(basename)
+            if overwrite:
+                graph_filename = f"{base}.graphml"
+            else:
+                graph_filename = f"{base}_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.graphml"
         else:
-            graph_filename = f"graph_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.pickle"
-    
+            if overwrite:
+                graph_filename = f"graph.pickle"
+            else:
+                graph_filename = f"graph_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.pickle"
+    else:
+        basename = os.path.basename(graph_filename)
+        base, ext = os.path.splitext(basename)
+        if ext == '.graphml':
+            pass
+        else:
+            raise ValueError("Invalid graph_filename. Must be a .graphml file.")
+        if overwrite:
+            graph_filename = f"{base}.graphml"
+        else:
+            graph_filename = f"{base}_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.graphml"
+
     if inferred_columns_filename is not None:
         inferred_columns_dictionary_path = os.path.join(output_directory, inferred_columns_filename)
         inferred_columns_dictionary = pickle.load(open(inferred_columns_dictionary_path, 'rb'))
@@ -80,7 +98,7 @@ def create_graph(input_dataframe=None, preprocessed_dataframe=None,
             for j in knn_indices:
                 if i != j:
                     G.add_edge(i, j)
-    elif method == 'distance_threshold':
+    elif method == 'distance':
         dists = squareform(pdist(values, metric='euclidean'))
         for i in range(len(df)):
             for j in range(i + 1, len(df)):

@@ -22,7 +22,8 @@ def preprocess_dataframe(input_dataframe=None,
                          nan_threshold=0.5,
                          verbose=True, 
                          manifold_method=None, 
-                         manifold_dim=None):
+                         manifold_dim=None,
+                         overwrite=False):
 
     if verbose:
         print(f"--------------------------\nPreprocessing options\n--------------------------\n\n"
@@ -45,9 +46,15 @@ def preprocess_dataframe(input_dataframe=None,
         if isinstance(input_dataframe, str):
             basename = os.path.basename(input_dataframe)
             base, ext = os.path.splitext(basename)
-            preprocessed_filename = f"{base}_preprocessed_{datetime.datetime.now().strftime('%Y%m%d%H%M')}{ext}"
+            if overwrite:
+                preprocessed_filename = f"{base}_preprocessed{ext}"
+            else:    
+                preprocessed_filename = f"{base}_preprocessed_{datetime.datetime.now().strftime('%Y%m%d%H%M')}{ext}"
         else:
-            preprocessed_filename = f"preprocessed_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.pickle"
+            if overwrite:
+                preprocessed_filename = f"preprocessed.pickle"
+            else:
+                preprocessed_filename = f"preprocessed_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.pickle"
     
     output_path = os.path.join(output_directory, preprocessed_filename)
     if verbose: print(f"{datetime.datetime.now()}: Output path for the preprocessed file: {output_path}.")

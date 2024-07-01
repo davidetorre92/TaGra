@@ -29,7 +29,8 @@ default_config = {
     "betweenness_distribution_filename": "betweeness.png",
     "community_composition_filename": "communities.png",
     "graph_visualization_filename": "graph.png",
-    "prob_heatmap_filename": "neigh_prob_heatmap.png"
+    "prob_heatmap_filename": "neigh_prob_heatmap.png",
+    "overwrite": False
 }
 
 def load_config(config_path="config.json"):
