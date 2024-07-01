@@ -63,7 +63,7 @@ def heat_map_prob(probabilities, df_neigh, label_col, prob_heatmap_path):
         prob_matrix.loc[i, j] = prob
 
     fig, ax = plt.subplots(figsize=(8, 6))
-    cax = ax.imshow(prob_matrix, cmap='viridis', interpolation='nearest')
+    cax = ax.imshow(prob_matrix, cmap='seismic', interpolation='nearest')
     fig.colorbar(cax)
 
     for i in range(len(labels)):
@@ -76,7 +76,6 @@ def heat_map_prob(probabilities, df_neigh, label_col, prob_heatmap_path):
     ax.set_yticks(range(len(labels)))
     ax.set_xticklabels(labels)
     ax.set_yticklabels(labels)
-    ax.grid()
     plt.xlabel('Label j')
     plt.ylabel('Label i')
     if prob_heatmap_path:
@@ -153,7 +152,7 @@ def plot_community_composition(G, attribute_name, outpath):
         fig.savefig(outpath)
         print(f"{datetime.datetime.now()}: Community composition saved in {outpath}")
         
-def matplotlib_graph_visualization(G, attribute = None, outpath = None, palette = 'viridis', pos = None):
+def matplotlib_graph_visualization(G, attribute = None, outpath = None, palette = 'seismic', pos = None):
     plt.figure(figsize=(10, 10))
     if pos is None:
       pos = nx.spring_layout(G, seed=2112)

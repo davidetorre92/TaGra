@@ -26,7 +26,8 @@ def analyze_graph(graph,
                   betweenness_distribution_filename = None,
                   prob_heatmap_filename = None,
                   community_composition_filename = None,
-                  graph_visualization_filename = None):
+                  graph_visualization_filename = None,
+                  overwrite = False):
     
     # Output path managing
     time_str = datetime.now().strftime('%Y%m%d%H%M')
@@ -39,49 +40,55 @@ def analyze_graph(graph,
     if degree_distribution_filename is None:
         degree_distribution_outpath = None
     else:
-        basename = os.path.basename(degree_distribution_filename)
-        base, ext = os.path.splitext(basename)
-        degree_distribution_filename = f"{base}_{time_str}{ext}"
+        if overwrite is False:
+            basename = os.path.basename(degree_distribution_filename)
+            base, ext = os.path.splitext(basename)
+            degree_distribution_filename = f"{base}_{time_str}{ext}"
         degree_distribution_outpath = os.path.join(output_directory, degree_distribution_filename)
 
     if betweenness_distribution_filename is None:
         betweenness_distribution_outpath = None
     else:
-        basename = os.path.basename(betweenness_distribution_filename)
-        base, ext = os.path.splitext(basename)
-        betweenness_distribution_filename = f"{base}_{time_str}{ext}"
+        if overwrite is False:
+            basename = os.path.basename(betweenness_distribution_filename)
+            base, ext = os.path.splitext(basename)
+            betweenness_distribution_filename = f"{base}_{time_str}{ext}"
         betweenness_distribution_outpath = os.path.join(output_directory, betweenness_distribution_filename)
 
     if prob_heatmap_filename is None:
         prob_heatmap_outpath = None
     else:
-        basename = os.path.basename(prob_heatmap_filename)
-        base, ext = os.path.splitext(basename)
-        prob_heatmap_filename = f"{base}_{time_str}{ext}"
+        if overwrite is False:
+            basename = os.path.basename(prob_heatmap_filename)
+            base, ext = os.path.splitext(basename)
+            prob_heatmap_filename = f"{base}_{time_str}{ext}"
         prob_heatmap_outpath = os.path.join(output_directory, prob_heatmap_filename)
 
     if community_composition_filename is None:
         community_composition_outpath = None
     else:
-        basename = os.path.basename(community_composition_filename)
-        base, ext = os.path.splitext(basename)
-        community_composition_filename = f"{base}_{time_str}{ext}"
+        if overwrite is False:
+            basename = os.path.basename(community_composition_filename)
+            base, ext = os.path.splitext(basename)
+            community_composition_filename = f"{base}_{time_str}{ext}"
         community_composition_outpath = os.path.join(output_directory, community_composition_filename)
 
     if graph_visualization_filename is None:
         graph_visualization_path = None
     else:
-        basename = os.path.basename(graph_visualization_filename)
-        base, ext = os.path.splitext(basename)
-        graph_visualization_filename = f"{base}_{time_str}{ext}"
+        if overwrite is False:
+            basename = os.path.basename(graph_visualization_filename)
+            base, ext = os.path.splitext(basename)
+            graph_visualization_filename = f"{base}_{time_str}{ext}"
         graph_visualization_path = os.path.join(output_directory, graph_visualization_filename)
 
     if neigh_prob_filename is None:
         neigh_prob_path = None
     else:
-        basename = os.path.basename(neigh_prob_filename)
-        base, ext = os.path.splitext(basename)
-        neigh_prob_filename = f"{base}_{time_str}{ext}"
+        if overwrite is False:
+            basename = os.path.basename(neigh_prob_filename)
+            base, ext = os.path.splitext(basename)
+            neigh_prob_filename = f"{base}_{time_str}{ext}"
         neigh_prob_path = os.path.join(output_directory, neigh_prob_filename)
 
     if isinstance(graph, str):
@@ -102,7 +109,7 @@ def analyze_graph(graph,
         print(f"--------------------------\nGraph analysis options\n--------------------------\n\n"
               f"\tOptions:\n"
               f"\tgraph_path: {graph}, attribute: {target_attributes}, \n"
-              f"\tclustering_method: {clustering_method}, inconsistency_threshold: {inconsistency_threshold}, verbose: {verbose}\n\n")
+              f"\tclustering_method: {clustering_method}, inconsistency_threshold: {inconsistency_threshold}, verbose: {verbose}, overwrite: {overwrite}\n\n")
 
     if target_attributes is not None:
         df_neigh = analyze_neighborhood_attributes(G, target_attribute = target_attributes)
