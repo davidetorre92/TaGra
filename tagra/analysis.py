@@ -25,7 +25,7 @@ def analyze_graph(graph,
                   degree_distribution_filename = None,
                   betweenness_distribution_filename = None,
                   prob_heatmap_filename = None,
-                  community_composition_filename = None,
+                  community_filename = None,
                   graph_visualization_filename = None,
                   overwrite = False):
     
@@ -64,14 +64,14 @@ def analyze_graph(graph,
             prob_heatmap_filename = f"{base}_{time_str}{ext}"
         prob_heatmap_outpath = os.path.join(output_directory, prob_heatmap_filename)
 
-    if community_composition_filename is None:
+    if community_filename is None:
         community_composition_outpath = None
     else:
         if overwrite is False:
-            basename = os.path.basename(community_composition_filename)
+            basename = os.path.basename(community_filename)
             base, ext = os.path.splitext(basename)
-            community_composition_filename = f"{base}_{time_str}{ext}"
-        community_composition_outpath = os.path.join(output_directory, community_composition_filename)
+            community_filename = f"{base}_{time_str}{ext}"
+        community_composition_outpath = os.path.join(output_directory, community_filename)
 
     if graph_visualization_filename is None:
         graph_visualization_path = None

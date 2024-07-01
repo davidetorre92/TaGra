@@ -27,7 +27,7 @@ default_config = {
     "neigh_prob_path": "neigh_prob.txt",
     "degree_distribution_filename": "degree.png",
     "betweenness_distribution_filename": "betweeness.png",
-    "community_composition_filename": "communities.png",
+    "community_filename": "communities.png",
     "graph_visualization_filename": "graph.png",
     "prob_heatmap_filename": "neigh_prob_heatmap.png",
     "overwrite": False

@@ -9,9 +9,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 def create_graph(input_dataframe=None, preprocessed_dataframe=None,
                  inferred_columns_filename=None, numeric_columns=None,
-                 output_directory=None, graph_filename=None, method='knn',
-                 distance_threshold=0.75,
-                 similarity_threshold=0.95, k=5, verbose=True, overwrite=False):
+                 output_directory=None, graph_filename=None, method='knn', k=5,
+                 distance_threshold=None,
+                 similarity_threshold=None, verbose=True, overwrite=False):
     if verbose:
         print(f"--------------------------\nGraph creation options\n--------------------------\n\n"
               f"\tOptions:\n"
@@ -53,7 +53,7 @@ def create_graph(input_dataframe=None, preprocessed_dataframe=None,
     if inferred_columns_filename is not None:
         inferred_columns_dictionary_path = os.path.join(output_directory, inferred_columns_filename)
         inferred_columns_dictionary = pickle.load(open(inferred_columns_dictionary_path, 'rb'))
-        numerical_columns = inferred_columns_dictionary['numeric_columns']
+        numeric_columns = inferred_columns_dictionary['numeric_columns']
     output_path = os.path.join(output_directory, graph_filename)
     print(f"{datetime.datetime.now()}: Output path for the preprocessed file: {output_path}.")
 
@@ -76,7 +76,7 @@ def create_graph(input_dataframe=None, preprocessed_dataframe=None,
             raise ValueError("Invalid preprocessed_dataframe. Must be a path to a file or a pandas DataFrame.")
 
     if df.shape[0] != df_preprocessed.shape[0]:
-        df_preprocessed = df.dropna().copy()
+        df = df.dropna().copy()
         if verbose:
             print(f"{datetime.datetime.now()}: Dropped rows with NaN values from the original dataframe due to mismatch with preprocessed dataframe.")
 
@@ -85,11 +85,11 @@ def create_graph(input_dataframe=None, preprocessed_dataframe=None,
     for i, row in df.iterrows():
         G.add_node(i, **row.to_dict())
 
-    if numerical_columns is None:
+    if numeric_columns is None:
         numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
         values = df_preprocessed.select_dtypes(include=numerics).values
     else:
-        values = df_preprocessed[numerical_columns].values
+        values = df_preprocessed[numeric_columns].values
 
     if method == 'knn':
         dists = squareform(pdist(values, metric='euclidean'))

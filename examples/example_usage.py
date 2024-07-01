@@ -60,8 +60,7 @@ def main(config_path):
         verbose=config['verbose'],
         output_directory=config['output_directory'],
         degree_distribution_filename=config['degree_distribution_filename'],
-        betweenness_distribution_filename=config['betweenness_distribution_filename'],
-        community_composition_filename=config['community_composition_filename'],
+        community_filename=config['community_filename'],
         graph_visualization_filename=config['graph_visualization_filename'],
         prob_heatmap_filename=config['prob_heatmap_filename'],
         overwrite=config['overwrite']
