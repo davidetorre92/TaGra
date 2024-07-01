@@ -55,8 +55,6 @@ def main(config_path):
     analyze_graph(
         graph,
         target_attributes=config['target_columns'],
-        clustering_method=config['clustering_method'],
-        inconsistency_threshold=config['inconsistency_threshold'],
         verbose=config['verbose'],
         output_directory=config['output_directory'],
         degree_distribution_filename=config['degree_distribution_filename'],

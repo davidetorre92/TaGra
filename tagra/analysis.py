@@ -17,13 +17,10 @@ from .utils import (
 
 def analyze_graph(graph, 
                   target_attributes=None, 
-                  clustering_method='hierarchical', 
-                  inconsistency_threshold=0.1,
                   verbose=True,
                   output_directory=None,
                   neigh_prob_filename = None,
                   degree_distribution_filename = None,
-                  betweenness_distribution_filename = None,
                   prob_heatmap_filename = None,
                   community_filename = None,
                   graph_visualization_filename = None,
@@ -45,15 +42,6 @@ def analyze_graph(graph,
             base, ext = os.path.splitext(basename)
             degree_distribution_filename = f"{base}_{time_str}{ext}"
         degree_distribution_outpath = os.path.join(output_directory, degree_distribution_filename)
-
-    if betweenness_distribution_filename is None:
-        betweenness_distribution_outpath = None
-    else:
-        if overwrite is False:
-            basename = os.path.basename(betweenness_distribution_filename)
-            base, ext = os.path.splitext(basename)
-            betweenness_distribution_filename = f"{base}_{time_str}{ext}"
-        betweenness_distribution_outpath = os.path.join(output_directory, betweenness_distribution_filename)
 
     if prob_heatmap_filename is None:
         prob_heatmap_outpath = None
@@ -109,7 +97,7 @@ def analyze_graph(graph,
         print(f"--------------------------\nGraph analysis options\n--------------------------\n\n"
               f"\tOptions:\n"
               f"\tgraph_path: {graph}, attribute: {target_attributes}, \n"
-              f"\tclustering_method: {clustering_method}, inconsistency_threshold: {inconsistency_threshold}, verbose: {verbose}, overwrite: {overwrite}\n\n")
+              f"\tverbose: {verbose}, overwrite: {overwrite}\n\n")
 
     if target_attributes is not None:
         df_neigh = analyze_neighborhood_attributes(G, target_attribute = target_attributes)
@@ -127,13 +115,8 @@ def analyze_graph(graph,
                    'title': 'Degree distribution',
                    'xlabel': 'Degree',
                    'ylabel': 'Number of Nodes'}
-    betweenness_data = {'data': [degree for _, degree in G.degree()],
-                   'title': 'Degree distribution',
-                   'xlabel': 'Degree',
-                   'ylabel': 'Number of Nodes'}
     
     plot_distribution(degree_data, degree_distribution_outpath)
-    plot_distribution(betweenness_data, betweenness_distribution_outpath)
     plot_community_composition(G, target_attributes, community_composition_outpath)
     if graph_visualization_path is not None:
         matplotlib_graph_visualization(G, target_attributes, graph_visualization_path, palette = 'viridis')
