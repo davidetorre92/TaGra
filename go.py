@@ -9,12 +9,12 @@ from tagra.graph import create_graph
 from tagra.analysis import analyze_graph
 from tagra.config import *
 
-def main(config_path):
+def main(config_path, dataset_path):
     start_time = datetime.now()
 
-    config = load_config(config_path)
+    config = load_config(config_path, dataset_path)
     # Preprocessing
-    df_preprocessed = preprocess_dataframe(
+    df_preprocessed, manifold_pos = preprocess_dataframe(
         input_dataframe=config['input_dataframe'],
         output_directory=config['output_directory'],
         preprocessed_filename=config['preprocessed_filename'],
@@ -31,7 +31,6 @@ def main(config_path):
         nan_threshold=config['nan_threshold'],
         verbose=config['verbose'],
         manifold_method=config['manifold_method'],
-        manifold_dim=config['manifold_dimension'],
         overwrite=config['overwrite']
     )
 
@@ -50,7 +49,11 @@ def main(config_path):
         verbose=config['verbose'],
         overwrite=config['overwrite']
     )
-
+    if config['manifold_method'] is not None:
+        pos = manifold_pos
+    else:
+        pos = None
+        
     # Graph Analysis
     analyze_graph(
         graph,
@@ -61,6 +64,7 @@ def main(config_path):
         community_filename=config['community_filename'],
         graph_visualization_filename=config['graph_visualization_filename'],
         prob_heatmap_filename=config['prob_heatmap_filename'],
+        pos=pos,
         overwrite=config['overwrite']
     )
 
@@ -71,10 +75,17 @@ def main(config_path):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run TaGra example with configuration file.')
     parser.add_argument('-c', '--config', type=str, required=False, default=None, help='Path to the configuration file.')
+    parser.add_argument('-d', '--dataframe', type=str, required=False, default=None, help='Path to the input dataframe.')
     args = parser.parse_args()
 
     if args.config is not None and not os.path.isfile(args.config):
         print(f"Error: The configuration file {args.config} does not exist.")
         sys.exit(1)
+    if args.dataframe is not None and not os.path.isfile(args.dataframe):
+        print(f"Error: The dataset file {args.dataframe} does not exist.")
+        sys.exit(1)
+    if args.config is None and args.dataframe is None:
+        print(f"Error: Either --config or --dataframe must be specified.")
+        sys.exit(1)
 
-    main(args.config)
+    main(args.config, args.dataframe)

@@ -5,6 +5,7 @@ default_config = {
     "output_directory": "results/", 
     "preprocessed_filename": None,
     "graph_filename": None,
+    "inferred_columns_filename": None,
     "numeric_columns": [],
     "categorical_columns": [],
     "target_columns": None,
@@ -16,14 +17,11 @@ default_config = {
     "nan_action": "infer",
     "nan_threshold": 0,
     "verbose": True,
-    "manifold_method": None,
-    "manifold_dimension": None,
+    "manifold_method": 'Isomap',
     "method": "knn",
     "k": 5,
-    "distance_threshold": 0.75,
-    "similarity_threshold": 0.95,
-    "clustering_method": "hierarchical",
-    "inconsistency_threshold": 0.1,
+    "distance_threshold": None,
+    "similarity_threshold": None,
     "neigh_prob_path": "neigh_prob.txt",
     "degree_distribution_filename": "degree.png",
     "betweenness_distribution_filename": "betweeness.png",
@@ -33,8 +31,15 @@ default_config = {
     "overwrite": False
 }
 
-def load_config(config_path="config.json"):
-    
+def load_config(config_path = None, dataset_path = None):
+    if config_path is None:
+        if dataset_path is None:
+            raise ValueError("Either config_path or dataset_path must be specified.")
+        config = default_config
+        config['input_dataframe'] = dataset_path
+        if config["verbose"]:
+            print("Using default configuration.")
+
     if type(config_path) is str:
         if os.path.exists(config_path):
             with open(config_path, 'r') as f:

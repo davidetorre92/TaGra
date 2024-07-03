@@ -18,6 +18,7 @@ from .utils import (
 def analyze_graph(graph, 
                   target_attributes=None, 
                   verbose=True,
+                  pos=None,
                   output_directory=None,
                   neigh_prob_filename = None,
                   degree_distribution_filename = None,
@@ -115,8 +116,7 @@ def analyze_graph(graph,
                    'title': 'Degree distribution',
                    'xlabel': 'Degree',
                    'ylabel': 'Number of Nodes'}
-    
-    plot_distribution(degree_data, degree_distribution_outpath)
-    plot_community_composition(G, target_attributes, community_composition_outpath)
-    if graph_visualization_path is not None:
-        matplotlib_graph_visualization(G, target_attributes, graph_visualization_path, palette = 'viridis')
+
+    if degree_distribution_outpath is not None: plot_distribution(degree_data, degree_distribution_outpath)
+    if community_composition_outpath is not None: plot_community_composition(G, target_attributes, community_composition_outpath)
+    if graph_visualization_path is not None: matplotlib_graph_visualization(G, target_attributes, graph_visualization_path, pos = pos)

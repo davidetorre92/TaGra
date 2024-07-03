@@ -3,7 +3,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-
+import pdb
 def analyze_neighborhood_attributes(graph, target_attribute, return_probs=False):
     """
     Analyzes attributes in the neighborhoods of each node in a graph, optionally returning probabilities.
@@ -102,7 +102,7 @@ def plot_distribution(data_dict, outpath, bins = None, double_log = True):
         fig.savefig(outpath)
         print(f"{datetime.datetime.now()}: {data_dict['title']} saved in {outpath}")
 
-def plot_community_composition(G, attribute_name, outpath):
+def plot_community_composition(G, attribute_name, outpath, palette = 'seismic'):
     communities_generator = nx.algorithms.community.girvan_newman(G)
     top_level_communities = next(communities_generator)
     communities = [list(c) for c in sorted(top_level_communities, key=len, reverse=True)]
@@ -115,60 +115,73 @@ def plot_community_composition(G, attribute_name, outpath):
         unique_labels = [0]
 
     community_compositions = {}
+    cmap = plt.get_cmap(palette)
+
     if attribute_name is not None:
         for comm_id, community in enumerate(communities):
+            if len(community) == 1:
+                continue
             labels_community = [G.nodes[node][attribute_name] for node in community]
-            unique_labels, counts = np.unique(labels_community, return_counts=True)
             community_compositions[comm_id] = {label: 0 for label in unique_labels}
-            for label, count in zip(unique_labels, counts):
+            measured_unique_labels, counts = np.unique(labels_community, return_counts=True)
+            for label, count in zip(measured_unique_labels, counts):
                 community_compositions[comm_id][label] = count
     else:
         for comm_id, community in enumerate(communities):
-            labels_community = [0 for node in community]
+            labels_community = [0 for _ in community]
             unique_labels, counts = np.unique(labels_community, return_counts=True)
             community_compositions[comm_id] = {label: 0 for label in unique_labels}
             for label, count in zip(unique_labels, counts):
                 community_compositions[comm_id][label] = count
-
     indices = list(community_compositions.keys())
-    bar_width = 0.35
-    fig, ax = plt.subplots(figsize = (15,15))
+    bar_width = 0.9
+    fig, ax = plt.subplots(figsize=(8,6))
 
     bottoms = [0] * len(indices)
+    colors = {label: cmap(i) for label, i in zip(unique_labels, np.linspace(0, 1, len(unique_labels)))}
+    # Plot bars
     for label in unique_labels:
         values = [community_compositions[idx].get(label, 0) for idx in indices]
-        ax.bar(indices, values, bar_width, label=label, bottom=bottoms)
+        ax.bar(indices, values, bar_width, label=f"{attribute_name}={label}", bottom=bottoms, color=colors[label])
         bottoms = [bottom + value for bottom, value in zip(bottoms, values)]
-
+    y_mx = max(bottoms)
+    y_max = max(y_mx * 1.1, 1)
     ax.set_xticks(indices)
     ax.set_xticklabels(indices)
     ax.set_xlabel('Community ID')
     ax.set_ylabel('Counts')
     ax.set_title('Counts of outcomes by community ID')
-    ax.grid()
-    ax.legend()
+    ax.set_ylim([0, y_max])
+    # ax.grid()
+    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 
     if outpath:
+        fig.tight_layout()
         fig.savefig(outpath)
         print(f"{datetime.datetime.now()}: Community composition saved in {outpath}")
         
-def matplotlib_graph_visualization(G, attribute = None, outpath = None, palette = 'seismic', pos = None):
+def matplotlib_graph_visualization(G, attribute = None, outpath = None, palette = 'seismic_r', pos = None):
     plt.figure(figsize=(10, 10))
     if pos is None:
-      pos = nx.spring_layout(G, seed=2112)
+        pos = nx.spring_layout(G, seed=2112)
+        title_string = "Graph of Relations"
+    else:
+        title_string = "Graph of Relations with manifold learning"
 
     node_color = []
+    cmap = plt.get_cmap(palette)
     if attribute is not None:
         classification_attribute_name = attribute
         y = np.array([G.nodes[node][classification_attribute_name] for node in G.nodes()])
         unique = np.unique(y)
-        unique_dict = {key: index for index, key in enumerate(unique)}
-        colors = np.linspace(0, 1, len(unique))
-        cmap = plt.get_cmap(palette, len(unique))
-        color_array = cmap(colors)
-        node_color = [color_array[unique_dict[key]] for key in y]
-    nx.draw(G, pos, with_labels=True, node_size=50, font_size=8, node_color = node_color)
-    plt.title("Graph of Relations Based on Manifold Learning Transformed Data")
+        unique_to_int = {key: index for index, key in enumerate(unique)}
+        color_array = [cmap(r) for r in np.linspace(0, 1, len(unique))]
+        node_color = [color_array[unique_to_int[key]] for key in y]
+    else:
+        color = cmap(0)
+        node_color = [color for _ in G.nodes()]
+    nx.draw(G, pos, with_labels=False, node_size=100, font_color="white", font_size=10, node_color = node_color)
+    plt.title(title_string)
     if outpath:
         plt.savefig(outpath)
         print(f'{datetime.datetime.now()}: Graph saved in {outpath}')
