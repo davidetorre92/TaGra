@@ -5,7 +5,7 @@ import pandas as pd
 import pickle
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder, LabelEncoder
 from sklearn.manifold import Isomap, TSNE
-
+import pdb
 def preprocess_dataframe(input_dataframe=None, 
                          output_directory="results/", 
                          preprocessed_filename=None,
@@ -240,8 +240,10 @@ def preprocess_dataframe(input_dataframe=None,
         print(f"{datetime.datetime.now()}: Encoded categorical columns using {categorical_encoding} encoding.")
 
     # Manifold learning
+    manifold_positions = None
     if manifold_method:
-        if len(numeric_col) < manifold_dim:
+        manifold_dim = 2
+        if len(numeric_columns) < manifold_dim:
             if verbose:
                 print(f"{datetime.datetime.now()}: manifold_dim is larger than the number of numeric columns. manifold_dim set to {len(numeric_col)}. Skipping...")
         else:
@@ -253,15 +255,16 @@ def preprocess_dataframe(input_dataframe=None,
                 raise ValueError(f"Unsupported manifold learning method: {manifold_method}")
             manifold_numeric_columns = [f'manifold_{i}' for i in range(manifold_dim)]
             manifold_transform = manifold.fit_transform(df[numeric_columns])
-            df = df.drop(columns=numeric_columns)
-            df[manifold_numeric_columns] = manifold_transform
-            numeric_columns = manifold_numeric_columns
+            df_manifold = df.copy()
+            df_manifold = df_manifold.drop(columns=numeric_columns)
+            df_manifold[manifold_numeric_columns] = manifold_transform
+            manifold_positions = manifold_transform
             if verbose:
                 print(f"{datetime.datetime.now()}: Applied {manifold_method} manifold learning.")
 
     # Save columns category
+    inferred_columns_dictionary = {}
     if inferred_columns_filename is not None:
-        inferred_columns_dictionary = {}
         inferred_columns_dictionary["numeric_columns"] = numeric_columns
         inferred_columns_dictionary["categorical_columns"] = categorical_columns
         inferred_columns_dictionary["ignore_columns"] = ignore_columns
@@ -287,4 +290,4 @@ def preprocess_dataframe(input_dataframe=None,
     if verbose:
         print(f"{datetime.datetime.now()}: Saved preprocessed DataFrame to {output_path}.")
 
-    return df
+    return df, manifold_positions

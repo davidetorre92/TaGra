@@ -9,10 +9,12 @@ from tagra.graph import create_graph
 from tagra.analysis import analyze_graph
 from tagra.config import *
 
-def main(config_path, dataset_path):
+def main(config_path, dataset_path, target_class):
     start_time = datetime.now()
 
     config = load_config(config_path, dataset_path)
+    if target_class is not None:
+        config['target_columns'] = target_class
     # Preprocessing
     df_preprocessed, manifold_pos = preprocess_dataframe(
         input_dataframe=config['input_dataframe'],
@@ -76,6 +78,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run TaGra example with configuration file.')
     parser.add_argument('-c', '--config', type=str, required=False, default=None, help='Path to the configuration file.')
     parser.add_argument('-d', '--dataframe', type=str, required=False, default=None, help='Path to the input dataframe.')
+    parser.add_argument('-a', '--attribute', type=str, required=False, default=None, help='Path to the input dataframe.')
     args = parser.parse_args()
 
     if args.config is not None and not os.path.isfile(args.config):
@@ -88,4 +91,4 @@ if __name__ == "__main__":
         print(f"Error: Either --config or --dataframe must be specified.")
         sys.exit(1)
 
-    main(args.config, args.dataframe)
+    main(args.config, args.dataframe, args.attribute)

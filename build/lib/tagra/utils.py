@@ -119,21 +119,22 @@ def plot_community_composition(G, attribute_name, outpath, palette = 'seismic'):
 
     if attribute_name is not None:
         for comm_id, community in enumerate(communities):
+            if len(community) == 1:
+                continue
             labels_community = [G.nodes[node][attribute_name] for node in community]
-            unique_labels, counts = np.unique(labels_community, return_counts=True)
             community_compositions[comm_id] = {label: 0 for label in unique_labels}
-            for label, count in zip(unique_labels, counts):
+            measured_unique_labels, counts = np.unique(labels_community, return_counts=True)
+            for label, count in zip(measured_unique_labels, counts):
                 community_compositions[comm_id][label] = count
     else:
         for comm_id, community in enumerate(communities):
-            labels_community = [0 for node in community]
+            labels_community = [0 for _ in community]
             unique_labels, counts = np.unique(labels_community, return_counts=True)
             community_compositions[comm_id] = {label: 0 for label in unique_labels}
             for label, count in zip(unique_labels, counts):
                 community_compositions[comm_id][label] = count
-
     indices = list(community_compositions.keys())
-    bar_width = 0.35
+    bar_width = 0.9
     fig, ax = plt.subplots(figsize=(8,6))
 
     bottoms = [0] * len(indices)
@@ -143,12 +144,15 @@ def plot_community_composition(G, attribute_name, outpath, palette = 'seismic'):
         values = [community_compositions[idx].get(label, 0) for idx in indices]
         ax.bar(indices, values, bar_width, label=f"{attribute_name}={label}", bottom=bottoms, color=colors[label])
         bottoms = [bottom + value for bottom, value in zip(bottoms, values)]
+    y_mx = max(bottoms)
+    y_max = max(y_mx * 1.1, 1)
     ax.set_xticks(indices)
     ax.set_xticklabels(indices)
     ax.set_xlabel('Community ID')
     ax.set_ylabel('Counts')
     ax.set_title('Counts of outcomes by community ID')
-    ax.grid()
+    ax.set_ylim([0, y_max])
+    # ax.grid()
     ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 
     if outpath:
@@ -159,8 +163,10 @@ def plot_community_composition(G, attribute_name, outpath, palette = 'seismic'):
 def matplotlib_graph_visualization(G, attribute = None, outpath = None, palette = 'seismic_r', pos = None):
     plt.figure(figsize=(10, 10))
     if pos is None:
-      pos = nx.spring_layout(G, seed=2112)
-      title_string = "Graph of Relations"
+        pos = nx.spring_layout(G, seed=2112)
+        title_string = "Graph of Relations"
+    else:
+        title_string = "Graph of Relations with manifold learning"
 
     node_color = []
     cmap = plt.get_cmap(palette)
@@ -174,7 +180,7 @@ def matplotlib_graph_visualization(G, attribute = None, outpath = None, palette 
     else:
         color = cmap(0)
         node_color = [color for _ in G.nodes()]
-    nx.draw(G, pos, with_labels=True, node_size=175, font_color="white", font_size=10, node_color = node_color)
+    nx.draw(G, pos, with_labels=False, node_size=100, font_color="white", font_size=10, node_color = node_color)
     plt.title(title_string)
     if outpath:
         plt.savefig(outpath)

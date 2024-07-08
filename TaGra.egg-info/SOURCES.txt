@@ -18,4 +18,3 @@ tests/test_analysis.py
 tests/test_config.py
 tests/test_graph.py
 tests/test_preprocessing.py
-tests/tests.py
