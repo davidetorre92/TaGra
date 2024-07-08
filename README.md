@@ -211,6 +211,7 @@ Simple graph analysis.
 ```python
 from tagra.analysis import analyze_graph
 
+config = load_config(path_to_config)
 if config['manifold_method'] is not None:
     pos = manifold_pos
 else:
@@ -219,11 +220,13 @@ else:
 # Example usage
 results = analyze_graph(
     graph, # The output of construct_graph.
-    target_attributes='class', 
+    target_attributes='class',
+    pos = pos
+
 )
 
 ```
-`graph` will be analized and the a basic analysis on the graph will be performed.
+`graph` will be analized and the a basic analysis on the graph will be performed. `pos` will be used for the visualization.
  
 
 ### List of optional arguments and their default values
