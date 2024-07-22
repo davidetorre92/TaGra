@@ -222,7 +222,6 @@ results = analyze_graph(
     graph, # The output of construct_graph.
     target_attributes='class',
     pos = pos
-
 )
 
 ```
