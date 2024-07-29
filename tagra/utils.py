@@ -59,7 +59,9 @@ def print_neighbors_prob(df_neigh, label_col):
 
 def heat_map_prob(probabilities, df_neigh, label_col, prob_heatmap_path):
 
+    # Convert labels to string for better handling
     labels = sorted([str(label) for label in df_neigh[f'node_{label_col}'].unique()])
+    probabilities = {(str(k[0]), str(k[1])): v for k, v in probabilities.items()}
     prob_matrix = pd.DataFrame(index=labels, columns=labels, data=0.0)
 
     for (i, j), prob in probabilities.items():
@@ -169,7 +171,7 @@ def plot_community_composition(G, attribute_name, outpath, palette = 'seismic'):
         print(f"{datetime.datetime.now()}: Community composition saved in {outpath}")
     
     return 1
-def matplotlib_graph_visualization(G, attribute = None, outpath = None, palette = 'seismic_r', pos = None):
+def matplotlib_graph_visualization(G, attribute = None, outpath = None, palette = 'seismic', pos = None):
     NONE_STR = 'None'
     plt.figure(figsize=(10, 10))
     if pos is None:
@@ -191,7 +193,7 @@ def matplotlib_graph_visualization(G, attribute = None, outpath = None, palette 
         color = cmap(0)
         node_color = [color for _ in G.nodes()]
 
-    nx.draw(G, pos, with_labels=False, node_size=100, font_color="white", font_size=10, node_color = node_color)
+    nx.draw(G, pos, with_labels=False, node_size=50, font_color="white", font_size=10, node_color = node_color)
     plt.title(title_string)
     if outpath:
         plt.savefig(outpath)

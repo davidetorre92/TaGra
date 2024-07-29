@@ -6,6 +6,7 @@ import pickle
 import networkx as nx
 from scipy.spatial.distance import pdist, squareform
 from sklearn.metrics.pairwise import cosine_similarity
+import pdb
 
 def create_graph(input_dataframe=None, preprocessed_dataframe=None,
                  inferred_columns_filename=None, numeric_columns=None,
@@ -88,7 +89,6 @@ def create_graph(input_dataframe=None, preprocessed_dataframe=None,
     df_preprocessed = df_preprocessed.reset_index(drop=True)
     for i, row in df.iterrows():
         G.add_node(i, **row.to_dict())
-    print([G.nodes[i].get('Cardiac_arrest_at_home', 'none') for i in G.nodes])
 
     if numeric_columns is None:
         numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
@@ -112,15 +112,16 @@ def create_graph(input_dataframe=None, preprocessed_dataframe=None,
     elif method == 'distance':
         dists = squareform(pdist(values, metric='euclidean'))
         for ind_i in range(len(indices)):
-            for ind_j in range(i+1, len(indices)):
+            for ind_j in range(ind_i+1, len(indices)):
                 i = indices[ind_i]
                 j = indices[ind_j]
                 if dists[i, j] <= distance_threshold:
                     G.add_edge(i, j)
     elif method == 'similarity':
         sim_matrix = cosine_similarity(values)
+
         for ind_i in range(len(indices)):
-            for ind_j in range(i+1, len(indices)):
+            for ind_j in range(ind_i+1, len(indices)):
                 i = indices[ind_i]
                 j = indices[ind_j]
                 if sim_matrix[i, j] >= similarity_threshold:
