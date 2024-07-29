@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import os
 from datetime import datetime
+import pdb 
 
 from .utils import (
     analyze_neighborhood_attributes,
@@ -99,8 +100,9 @@ def analyze_graph(graph,
               f"\tOptions:\n"
               f"\tgraph_path: {graph}, attribute: {target_attributes}, \n"
               f"\tverbose: {verbose}, overwrite: {overwrite}\n\n")
-
     if target_attributes is not None:
+        # pdb.set_trace()
+
         df_neigh = analyze_neighborhood_attributes(G, target_attribute = target_attributes)
         probabilities = print_neighbors_prob(df_neigh, target_attributes)
         for (i, j), prob in probabilities.items():

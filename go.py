@@ -55,7 +55,7 @@ def main(config_path, dataset_path, target_class):
         pos = manifold_pos
     else:
         pos = None
-        
+
     # Graph Analysis
     analyze_graph(
         graph,

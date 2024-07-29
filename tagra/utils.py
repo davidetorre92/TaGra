@@ -17,15 +17,16 @@ def analyze_neighborhood_attributes(graph, target_attribute, return_probs=False)
     - pd.DataFrame: A DataFrame with each row representing a node. Columns include the node's attribute,
                     degree, and either the count or probability of each attribute in its neighborhood.
     """
-    
-    unique_attributes = set(nx.get_node_attributes(graph, target_attribute).values())
+    NONE_STR = 'None'
+    unique_attributes = set([graph.nodes[n].get(target_attribute, NONE_STR) for n in graph.nodes])
+    # unique_attributes = set(nx.get_node_attributes(graph, target_attribute).values())
     data = []
     for node in graph.nodes:
         neighbors = list(graph.neighbors(node))
-        neighbor_attrs = [graph.nodes[n].get(target_attribute, None) for n in neighbors]
+        neighbor_attrs = [graph.nodes[n].get(target_attribute, NONE_STR) for n in neighbors]
 
         attr_counts = {}
-        attr_counts[f"node_{target_attribute}"] = graph.nodes[node].get(target_attribute, None)
+        attr_counts[f"node_{target_attribute}"] = graph.nodes[node].get(target_attribute, NONE_STR)
         attr_counts["node_index"] = node
         attr_counts["degree"] = len(neighbors)
 
@@ -44,6 +45,7 @@ def analyze_neighborhood_attributes(graph, target_attribute, return_probs=False)
     return df
 
 def print_neighbors_prob(df_neigh, label_col):
+    # pdb.set_trace()
     probabilities = {}
     for label_i in df_neigh[f'node_{label_col}'].unique():
         nodes_with_label_i = df_neigh[df_neigh[f'node_{label_col}'] == label_i]
@@ -56,7 +58,8 @@ def print_neighbors_prob(df_neigh, label_col):
     return probabilities
 
 def heat_map_prob(probabilities, df_neigh, label_col, prob_heatmap_path):
-    labels = sorted(df_neigh[f'node_{label_col}'].unique())
+
+    labels = sorted([str(label) for label in df_neigh[f'node_{label_col}'].unique()])
     prob_matrix = pd.DataFrame(index=labels, columns=labels, data=0.0)
 
     for (i, j), prob in probabilities.items():
@@ -103,13 +106,13 @@ def plot_distribution(data_dict, outpath, bins = None, double_log = True):
         print(f"{datetime.datetime.now()}: {data_dict['title']} saved in {outpath}")
 
 def plot_community_composition(G, attribute_name, outpath, palette = 'seismic'):
+    NONE_STR = 'None'
     communities_generator = nx.algorithms.community.girvan_newman(G)
     top_level_communities = next(communities_generator)
     communities = [list(c) for c in sorted(top_level_communities, key=len, reverse=True)]
-
     if attribute_name is not None:
-        labels_per_node = [G.nodes[node][attribute_name] for node in G.nodes()]
-        unique_labels = np.unique(labels_per_node)
+        labels_per_node = [G.nodes[n].get(attribute_name, NONE_STR) for n in G.nodes]
+        unique_labels = set(labels_per_node)
     else:
         labels_per_node = [0 for node in G.nodes()]
         unique_labels = [0]
@@ -121,7 +124,7 @@ def plot_community_composition(G, attribute_name, outpath, palette = 'seismic'):
         for comm_id, community in enumerate(communities):
             if len(community) == 1:
                 continue
-            labels_community = [G.nodes[node][attribute_name] for node in community]
+            labels_community = [G.nodes[node].get(attribute_name, NONE_STR) for node in community]
             community_compositions[comm_id] = {label: 0 for label in unique_labels}
             measured_unique_labels, counts = np.unique(labels_community, return_counts=True)
             for label, count in zip(measured_unique_labels, counts):
@@ -133,12 +136,17 @@ def plot_community_composition(G, attribute_name, outpath, palette = 'seismic'):
             community_compositions[comm_id] = {label: 0 for label in unique_labels}
             for label, count in zip(unique_labels, counts):
                 community_compositions[comm_id][label] = count
+    
+    if len(community_compositions) == 0:
+        print(f"{datetime.datetime.now()}: No communities with more than 1 node found")
+        return 0
     indices = list(community_compositions.keys())
     bar_width = 0.9
     fig, ax = plt.subplots(figsize=(8,6))
 
     bottoms = [0] * len(indices)
     colors = {label: cmap(i) for label, i in zip(unique_labels, np.linspace(0, 1, len(unique_labels)))}
+
     # Plot bars
     for label in unique_labels:
         values = [community_compositions[idx].get(label, 0) for idx in indices]
@@ -159,8 +167,10 @@ def plot_community_composition(G, attribute_name, outpath, palette = 'seismic'):
         fig.tight_layout()
         fig.savefig(outpath)
         print(f"{datetime.datetime.now()}: Community composition saved in {outpath}")
-        
+    
+    return 1
 def matplotlib_graph_visualization(G, attribute = None, outpath = None, palette = 'seismic_r', pos = None):
+    NONE_STR = 'None'
     plt.figure(figsize=(10, 10))
     if pos is None:
         pos = nx.spring_layout(G, seed=2112)
@@ -172,7 +182,7 @@ def matplotlib_graph_visualization(G, attribute = None, outpath = None, palette 
     cmap = plt.get_cmap(palette)
     if attribute is not None:
         classification_attribute_name = attribute
-        y = np.array([G.nodes[node][classification_attribute_name] for node in G.nodes()])
+        y = np.array([G.nodes[node].get(classification_attribute_name, NONE_STR) for node in G.nodes()])
         unique = np.unique(y)
         unique_to_int = {key: index for index, key in enumerate(unique)}
         color_array = [cmap(r) for r in np.linspace(0, 1, len(unique))]
@@ -180,6 +190,7 @@ def matplotlib_graph_visualization(G, attribute = None, outpath = None, palette 
     else:
         color = cmap(0)
         node_color = [color for _ in G.nodes()]
+
     nx.draw(G, pos, with_labels=False, node_size=100, font_color="white", font_size=10, node_color = node_color)
     plt.title(title_string)
     if outpath:
