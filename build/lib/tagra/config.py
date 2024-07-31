@@ -24,7 +24,6 @@ default_config = {
     "similarity_threshold": None,
     "neigh_prob_path": "neigh_prob.txt",
     "degree_distribution_filename": "degree.png",
-    "betweenness_distribution_filename": "betweeness.png",
     "community_filename": "communities.png",
     "graph_visualization_filename": "graph.png",
     "prob_heatmap_filename": "neigh_prob_heatmap.png",
@@ -44,6 +43,13 @@ def load_config(config_path = None, dataset_path = None):
         if os.path.exists(config_path):
             with open(config_path, 'r') as f:
                 config = json.load(f)
+            # Check if all the settings are correct
+            for setting in config.keys():
+                if setting not in default_config and setting != 'input_dataframe':
+                    raise ValueError(f"Unknown setting '{setting}' in config file.")
+            if 'input_dataframe' not in config.keys():
+                raise ValueError("Input dataframe must be specified in config file.")                
+            # Set default values
             if config.get("verbose", None) is None:
                 config['verbose'] = default_config['verbose']
                 print(f"Using default value for 'verbose': {default_config['verbose']}")

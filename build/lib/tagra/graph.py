@@ -6,6 +6,7 @@ import pickle
 import networkx as nx
 from scipy.spatial.distance import pdist, squareform
 from sklearn.metrics.pairwise import cosine_similarity
+import pdb
 
 def create_graph(input_dataframe=None, preprocessed_dataframe=None,
                  inferred_columns_filename=None, numeric_columns=None,
@@ -81,33 +82,52 @@ def create_graph(input_dataframe=None, preprocessed_dataframe=None,
             print(f"{datetime.datetime.now()}: Dropped rows with NaN values from the original dataframe due to mismatch with preprocessed dataframe.")
 
     G = nx.Graph()
-
+    # Collect available indices (i.e. nodes) in the graph: in df_preprocessed we may have dropped nans!
+    df = df.loc[df_preprocessed.index,:]
+    # Reset indices to avoid unsorted node indices
+    df = df.reset_index(drop=True)
+    df_preprocessed = df_preprocessed.reset_index(drop=True)
     for i, row in df.iterrows():
         G.add_node(i, **row.to_dict())
 
     if numeric_columns is None:
         numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
-        values = df_preprocessed.select_dtypes(include=numerics).values
-    else:
+        data = df_preprocessed.select_dtypes(include=numerics)
+        numeric_columns = list(data.columns)
+        values = data.values
+    elif len(numeric_columns) > 0:
         values = df_preprocessed[numeric_columns].values
+    else:
+        raise ValueError("No numeric columns specified.")
 
+    if values.shape[1]  == 0:
+        raise ValueError("No numeric columns found in the preprocessed dataframe.")
+    
+    if verbose:
+        print(f"{datetime.datetime.now()}: Evaluating edges from the following columns: {numeric_columns}")
+    indices = [i for i in G.nodes()]
     if method == 'knn':
         dists = squareform(pdist(values, metric='euclidean'))
-        for i in range(len(df)):
+        for i in indices:
             knn_indices = np.argsort(dists[i])[:k + 1]
             for j in knn_indices:
                 if i != j:
                     G.add_edge(i, j)
     elif method == 'distance':
         dists = squareform(pdist(values, metric='euclidean'))
-        for i in range(len(df)):
-            for j in range(i + 1, len(df)):
+        for ind_i in range(len(indices)):
+            for ind_j in range(ind_i+1, len(indices)):
+                i = indices[ind_i]
+                j = indices[ind_j]
                 if dists[i, j] <= distance_threshold:
                     G.add_edge(i, j)
     elif method == 'similarity':
         sim_matrix = cosine_similarity(values)
-        for i in range(len(df)):
-            for j in range(i + 1, len(df)):
+
+        for ind_i in range(len(indices)):
+            for ind_j in range(ind_i+1, len(indices)):
+                i = indices[ind_i]
+                j = indices[ind_j]
                 if sim_matrix[i, j] >= similarity_threshold:
                     G.add_edge(i, j)
     else:
