@@ -92,7 +92,9 @@ def create_graph(input_dataframe=None, preprocessed_dataframe=None,
 
     if numeric_columns is None:
         numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
-        values = df_preprocessed.select_dtypes(include=numerics).values
+        data = df_preprocessed.select_dtypes(include=numerics)
+        numeric_columns = list(data.columns)
+        values = data.values
     elif len(numeric_columns) > 0:
         values = df_preprocessed[numeric_columns].values
     else:
@@ -101,6 +103,8 @@ def create_graph(input_dataframe=None, preprocessed_dataframe=None,
     if values.shape[1]  == 0:
         raise ValueError("No numeric columns found in the preprocessed dataframe.")
     
+    if verbose:
+        print(f"{datetime.datetime.now()}: Evaluating edges from the following columns: {numeric_columns}")
     indices = [i for i in G.nodes()]
     if method == 'knn':
         dists = squareform(pdist(values, metric='euclidean'))
