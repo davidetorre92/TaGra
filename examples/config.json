@@ -6,7 +6,7 @@
     "graph_filename": "graph_depression_depression_heart_failure.graphml",
     "numeric_columns": [],
     "categorical_columns": [],
-    "target_columns": "Death (1=Yes, 0=No)",
+    "target_columns": "Death",
     "unknown_column_action": "infer",
     "ignore_columns": ["id"],
     "numeric_threshold": 0.05,

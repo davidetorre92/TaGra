@@ -100,6 +100,7 @@ def analyze_graph(graph,
               f"\tOptions:\n"
               f"\tgraph_path: {graph}, attribute: {target_attributes}, \n"
               f"\tverbose: {verbose}, overwrite: {overwrite}\n\n")
+
     if target_attributes is not None:
         # pdb.set_trace()
 
