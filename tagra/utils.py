@@ -6,13 +6,13 @@ import numpy as np
 import pdb
 
 plt.rcParams.update({
-    'font.size': 18,  # General font size
-    'axes.titlesize': 20,  # Axes title font size
-    'axes.labelsize': 18,  # Axes labels font size
+    'font.size': 22,  # General font size
+    'axes.titlesize': 22,  # Axes title font size
+    'axes.labelsize': 22,  # Axes labels font size
     'xtick.labelsize': 16,  # X-tick labels font size
     'ytick.labelsize': 16,  # Y-tick labels font size
     'legend.fontsize': 18,  # Legend font size
-    'figure.titlesize': 22  # Figure title font size
+    'figure.titlesize': 26  # Figure title font size
     })
 
 def analyze_neighborhood_attributes(graph, target_attribute, return_probs=False):
@@ -83,14 +83,14 @@ def heat_map_prob(probabilities, df_neigh, label_col, prob_heatmap_path):
 
     fig.colorbar(cax)
 
-    text_size = max(5, 24 - len(labels))  # Adjust the multiplier as needed
+    text_size = max(5, 36 - len(labels))  # Adjust the multiplier as needed
 
     for i in range(len(labels)):
         for j in range(len(labels)):
             value = prob_matrix.iloc[i, j]
             color = 'w' if value < 0.35 else ('w' if value > 0.65 else 'black')
             text = ax.text(j, i, f"{value:.2f}",
-                           ha="center", va="center", color="w", fontsize = text_size)
+                           ha="center", va="center", color=color, fontsize = text_size)
 
     ax.set_title('Probability Distribution Heatmap')
     ax.set_xticks(range(len(labels)))
@@ -100,7 +100,7 @@ def heat_map_prob(probabilities, df_neigh, label_col, prob_heatmap_path):
     plt.xlabel('Label j')
     plt.ylabel('Label i')
     if prob_heatmap_path:
-        plt.savefig(prob_heatmap_path)
+        plt.savefig(prob_heatmap_path, dpi = 300)
         print(f"{datetime.datetime.now()}: Neighbour probability data saved in {prob_heatmap_path}")
 
 def plot_distribution(data_dict, outpath, bins = None, double_log = True):
@@ -121,7 +121,7 @@ def plot_distribution(data_dict, outpath, bins = None, double_log = True):
     ax.grid()
     fig.tight_layout()
     if outpath:
-        fig.savefig(outpath)
+        fig.savefig(outpath, dpi = 300)
         print(f"{datetime.datetime.now()}: {data_dict['title']} saved in {outpath}")
 
 def plot_community_composition(G, attribute_name, outpath, palette = 'seismic'):
@@ -173,8 +173,7 @@ def plot_community_composition(G, attribute_name, outpath, palette = 'seismic'):
         bottoms = [bottom + value for bottom, value in zip(bottoms, values)]
     y_mx = max(bottoms)
     y_max = max(y_mx * 1.1, 1)
-    ax.set_xticks(indices)
-    ax.set_xticklabels(indices)
+    ax.set_xticks([])
     ax.set_xlabel('Community ID')
     ax.set_ylabel('Counts')
     ax.set_title('Counts of outcomes by community ID')
@@ -184,7 +183,7 @@ def plot_community_composition(G, attribute_name, outpath, palette = 'seismic'):
 
     if outpath:
         fig.tight_layout()
-        fig.savefig(outpath)
+        fig.savefig(outpath, dpi = 300)
         print(f"{datetime.datetime.now()}: Community composition saved in {outpath}")
     
     return 1
@@ -213,7 +212,7 @@ def matplotlib_graph_visualization(G, attribute = None, outpath = None, palette 
     nx.draw(G, pos, with_labels=False, node_size=50, font_color="white", font_size=10, node_color = node_color)
     plt.title(title_string)
     if outpath:
-        plt.savefig(outpath)
+        plt.savefig(outpath, dpi = 300)
         print(f'{datetime.datetime.now()}: Graph saved in {outpath}')
 
 def measure_mixing_matrix(G, communities):
