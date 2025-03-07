@@ -1,142 +1,151 @@
 import datetime
 import os
+from typing import Optional, Union, List, Dict
 import numpy as np
 import pandas as pd
 import pickle
 import networkx as nx
+from scipy.spatial import cKDTree
 from scipy.spatial.distance import pdist, squareform
 from sklearn.metrics.pairwise import cosine_similarity
-import pdb
 
-def create_graph(input_dataframe=None, preprocessed_dataframe=None,
-                 inferred_columns_filename=None, numeric_columns=None,
-                 output_directory=None, graph_filename=None, method='knn', k=5,
-                 distance_threshold=None,
-                 similarity_threshold=None, verbose=True, overwrite=False):
-    if verbose:
-        print(f"--------------------------\nGraph creation options\n--------------------------\n\n"
-              f"\tOptions:\n"
-              f"\tinput_dataframe: {input_dataframe}, preprocessed_dataframe: {preprocessed_dataframe}\n"
-              f"\toutput_directory: {output_directory}, graph_filename: {graph_filename},\nmethod: {method}, distance_threshold: {distance_threshold}, similarity_threshold: {similarity_threshold}, k: {k}, verbose: {verbose}\n"
-              f"\toverwrite: {overwrite}\n")
 
-    # Output path managing
-    if output_directory is None:
-        output_directory = './'
-    if os.path.exists(output_directory) is False:
-        os.mkdir(output_directory)
-        print(f"{datetime.datetime.now()}: Output directory created: {output_directory}.")
+def create_graph(
+    input_dataframe: Optional[Union[str, pd.DataFrame]] = None,
+    preprocessed_dataframe: Optional[Union[str, pd.DataFrame]] = None,
+    inferred_columns_filename: Optional[str] = None,
+    numeric_columns: Optional[List[str]] = None,
+    output_directory: Optional[str] = None,
+    graph_filename: Optional[str] = None,
+    method: str = "knn",
+    k: int = 5,
+    distance_threshold: Optional[float] = None,
+    similarity_threshold: Optional[float] = None,
+    verbose: bool = True,
+    overwrite: bool = False,
+) -> nx.Graph:
+    """
+    Creates a graph from a dataframe by connecting points based on a specified method.
+
+    Args:
+        input_dataframe: Path to the input dataframe or a pandas DataFrame.
+        preprocessed_dataframe: Path to the preprocessed dataframe or a pandas DataFrame.
+        inferred_columns_filename: Path to a pickle file containing inferred numeric columns.
+        numeric_columns: List of numeric columns to use for graph construction.
+        output_directory: Directory to save the output graph.
+        graph_filename: Name of the output graph file.
+        method: Method for connecting nodes ('knn', 'distance', or 'similarity').
+        k: Number of nearest neighbors for the 'knn' method.
+        distance_threshold: Distance threshold for the 'distance' method.
+        similarity_threshold: Similarity threshold for the 'similarity' method.
+        verbose: Whether to print progress messages.
+        overwrite: Whether to overwrite existing files.
+
+    Returns:
+        A NetworkX graph with nodes and edges based on the specified method.
+
+    Raises:
+        ValueError: If invalid inputs are provided.
+    """
+    # Validate inputs
+    if input_dataframe is None and preprocessed_dataframe is None:
+        raise ValueError("Either input_dataframe or preprocessed_dataframe must be provided.")
+
+    # Output path management
+    output_directory = output_directory or "./"
+    os.makedirs(output_directory, exist_ok=True)
+
     if graph_filename is None:
-        if isinstance(input_dataframe, str):
-            basename = os.path.basename(input_dataframe)
-            base, _ = os.path.splitext(basename)
-            if overwrite:
-                graph_filename = f"{base}.graphml"
-            else:
-                graph_filename = f"{base}_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.graphml"
-        else:
-            if overwrite:
-                graph_filename = f"graph.pickle"
-            else:
-                graph_filename = f"graph_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.pickle"
-    else:
-        basename = os.path.basename(graph_filename)
-        base, ext = os.path.splitext(basename)
-        if ext == '.graphml':
-            pass
-        else:
-            raise ValueError("Invalid graph_filename. Must be a .graphml file.")
-        if overwrite:
-            graph_filename = f"{base}.graphml"
-        else:
-            graph_filename = f"{base}_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.graphml"
+        base = (
+            os.path.splitext(os.path.basename(input_dataframe))[0]
+            if isinstance(input_dataframe, str)
+            else "graph"
+        )
+        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M")
+        graph_filename = f"{base}.graphml" if overwrite else f"{base}_{timestamp}.graphml"
+    elif not graph_filename.endswith(".graphml"):
+        raise ValueError("graph_filename must end with '.graphml'.")
 
-    if inferred_columns_filename is not None:
-        inferred_columns_dictionary_path = os.path.join(output_directory, inferred_columns_filename)
-        inferred_columns_dictionary = pickle.load(open(inferred_columns_dictionary_path, 'rb'))
-        numeric_columns = inferred_columns_dictionary['numeric_columns']
     output_path = os.path.join(output_directory, graph_filename)
-    print(f"{datetime.datetime.now()}: Output path for the preprocessed file: {output_path}.")
+    if verbose:
+        print(f"{datetime.datetime.now()}: Output path: {output_path}.")
 
-    # Load dataframe
-    if isinstance(input_dataframe, str):
-        df = pd.read_pickle(input_dataframe) if input_dataframe.endswith('.pickle') else pd.read_csv(input_dataframe)
-    elif isinstance(input_dataframe, pd.DataFrame):
-        df = input_dataframe.copy()
-    else:
-        raise ValueError("Invalid input_dataframe. Must be a path to a file or a pandas DataFrame.")
+    # Load dataframes
+    df = _load_dataframe(input_dataframe)
+    df_preprocessed = _load_dataframe(preprocessed_dataframe) if preprocessed_dataframe is not None else df.copy()
 
-    if preprocessed_dataframe is None:
-        df_preprocessed = df.copy()
-    else:
-        if isinstance(preprocessed_dataframe, str):
-            df_preprocessed = pd.read_pickle(preprocessed_dataframe) if preprocessed_dataframe.endswith('.pickle') else pd.read_csv(preprocessed_dataframe)
-        elif isinstance(preprocessed_dataframe, pd.DataFrame):
-            df_preprocessed = preprocessed_dataframe.copy()
-        else:
-            raise ValueError("Invalid preprocessed_dataframe. Must be a path to a file or a pandas DataFrame.")
-
+    # Ensure dataframes have the same number of rows
     if df.shape[0] != df_preprocessed.shape[0]:
         df = df.dropna().copy()
         if verbose:
-            print(f"{datetime.datetime.now()}: Dropped rows with NaN values from the original dataframe due to mismatch with preprocessed dataframe.")
+            print(f"{datetime.datetime.now()}: Dropped rows with NaN values from the original dataframe.")
 
+    # Create graph and add nodes
     G = nx.Graph()
-    # Collect available indices (i.e. nodes) in the graph: in df_preprocessed we may have dropped nans!
-    df = df.loc[df_preprocessed.index,:]
-    # Reset indices to avoid unsorted node indices
-    df = df.reset_index(drop=True)
+    df = df.loc[df_preprocessed.index, :].reset_index(drop=True)
     df_preprocessed = df_preprocessed.reset_index(drop=True)
     for i, row in df.iterrows():
         G.add_node(i, **row.to_dict())
 
+    # Prepare numeric data
     if numeric_columns is None:
-        numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
-        data = df_preprocessed.select_dtypes(include=numerics)
-        numeric_columns = list(data.columns)
-        values = data.values
-    elif len(numeric_columns) > 0:
-        values = df_preprocessed[numeric_columns].values
-    else:
-        raise ValueError("No numeric columns specified.")
+        numeric_columns = df_preprocessed.select_dtypes(include=["number"]).columns.tolist()
+    values = df_preprocessed[numeric_columns].values
 
-    if values.shape[1]  == 0:
+    if values.shape[1] == 0:
         raise ValueError("No numeric columns found in the preprocessed dataframe.")
-    
-    if verbose:
-        print(f"{datetime.datetime.now()}: Evaluating edges from the following columns: {numeric_columns}")
-    indices = [i for i in G.nodes()]
-    if method == 'knn':
-        dists = squareform(pdist(values, metric='euclidean'))
-        for i in indices:
-            knn_indices = np.argsort(dists[i])[:k + 1]
-            for j in knn_indices:
-                if i != j:
-                    G.add_edge(i, j)
-    elif method == 'distance':
-        dists = squareform(pdist(values, metric='euclidean'))
-        for ind_i in range(len(indices)):
-            for ind_j in range(ind_i+1, len(indices)):
-                i = indices[ind_i]
-                j = indices[ind_j]
-                if dists[i, j] <= distance_threshold:
-                    G.add_edge(i, j)
-    elif method == 'similarity':
-        sim_matrix = cosine_similarity(values)
 
-        for ind_i in range(len(indices)):
-            for ind_j in range(ind_i+1, len(indices)):
-                i = indices[ind_i]
-                j = indices[ind_j]
-                if sim_matrix[i, j] >= similarity_threshold:
-                    G.add_edge(i, j)
+    if verbose:
+        print(f"{datetime.datetime.now()}: Using numeric columns: {numeric_columns}")
+
+    # Build edges based on the specified method
+    if method == "knn":
+        _add_knn_edges(G, values, k)
+    elif method == "distance":
+        _add_distance_edges(G, values, distance_threshold)
+    elif method == "similarity":
+        _add_similarity_edges(G, values, similarity_threshold)
     else:
         raise ValueError(f"Unsupported method: {method}")
 
-    pickle.dump(G, open(output_path, 'wb'))
+    # Save graph
+    with open(output_path, "wb") as f:
+        pickle.dump(G, f)
     if verbose:
-        print(f"{datetime.datetime.now()}: Nodes attributes:\n" 
-              f"{G.nodes[0].keys()}")
         print(f"{datetime.datetime.now()}: Saved graph to {output_path}.")
 
     return G
+
+
+def _load_dataframe(data: Union[str, pd.DataFrame]) -> pd.DataFrame:
+    """Load a dataframe from a file or return a copy if already a DataFrame."""
+    if isinstance(data, str):
+        return pd.read_pickle(data) if data.endswith(".pickle") else pd.read_csv(data)
+    elif isinstance(data, pd.DataFrame):
+        return data.copy()
+    raise ValueError("Input must be a file path or a pandas DataFrame.")
+
+
+def _add_knn_edges(G: nx.Graph, values: np.ndarray, k: int) -> None:
+    """Add edges based on k-nearest neighbors."""
+    tree = cKDTree(values)
+    for i in G.nodes():
+        distances, indices = tree.query(values[i], k=k + 1)
+        for j in indices[1:]:  # Skip the first index (self)
+            G.add_edge(i, j)
+
+
+def _add_distance_edges(G: nx.Graph, values: np.ndarray, distance_threshold: float) -> None:
+    """Add edges based on a distance threshold."""
+    tree = cKDTree(values)
+    pairs = tree.query_pairs(distance_threshold)
+    for i, j in pairs:
+        G.add_edge(i, j)
+
+
+def _add_similarity_edges(G: nx.Graph, values: np.ndarray, similarity_threshold: float) -> None:
+    """Add edges based on a similarity threshold."""
+    sim_matrix = cosine_similarity(values)
+    for i, j in zip(*np.where(sim_matrix >= similarity_threshold)):
+        if i != j:  # Avoid self-loops
+            G.add_edge(i, j)
