@@ -51,10 +51,7 @@ def main(config_path, dataset_path, target_class):
         verbose=config['verbose'],
         overwrite=config['overwrite']
     )
-    if config['manifold_method'] is not None:
-        pos = manifold_pos
-    else:
-        pos = None
+    pos = manifold_pos
 
     # Graph Analysis
     analyze_graph(
