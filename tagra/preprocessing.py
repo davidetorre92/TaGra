@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 import pickle
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder, LabelEncoder
-from sklearn.manifold import Isomap, TSNE
 import pdb
 def preprocess_dataframe(input_dataframe=None, 
                          output_directory="results/", 
@@ -245,22 +244,39 @@ def preprocess_dataframe(input_dataframe=None,
         manifold_dim = 2
         if len(numeric_columns) < manifold_dim:
             if verbose:
-                print(f"{datetime.datetime.now()}: manifold_dim is larger than the number of numeric columns. manifold_dim set to {len(numeric_col)}. Skipping...")
+                print(f"{datetime.datetime.now()}: manifold_dim is larger than number of numeric columns. Skipping...")
         else:
+            # Initialize manifold method
             if manifold_method == 'Isomap':
+                from sklearn.manifold import Isomap
                 manifold = Isomap(n_components=manifold_dim)
             elif manifold_method == 'TSNE':
+                from sklearn.manifold import TSNE
                 manifold = TSNE(n_components=manifold_dim)
+            elif manifold_method == 'UMAP':
+                from umap.umap_ import UMAP
+                manifold = UMAP(n_components=manifold_dim, 
+                            random_state=42,  # For reproducibility
+                            n_neighbors=15,    # Default=15, adjust based on data size
+                            min_dist=0.1)      # Default=0.1, controls cluster tightness
             else:
-                raise ValueError(f"Unsupported manifold learning method: {manifold_method}")
+                raise ValueError(f"Unsupported manifold method: {manifold_method}. "
+                                f"Choose from ['Isomap', 'TSNE', 'UMAP']")
+
+            # Common processing for all manifold methods
             manifold_numeric_columns = [f'manifold_{i}' for i in range(manifold_dim)]
+            
+            # Fit-transform and preserve original index
             manifold_transform = manifold.fit_transform(df[numeric_columns])
             df_manifold = df.copy()
             df_manifold = df_manifold.drop(columns=numeric_columns)
             df_manifold[manifold_numeric_columns] = manifold_transform
-            manifold_positions = manifold_transform
+            manifold_positions = manifold_transform  # For visualization coordinates
+            
             if verbose:
-                print(f"{datetime.datetime.now()}: Applied {manifold_method} manifold learning.")
+                print(f"{datetime.datetime.now()}: Applied {manifold_method} with settings: "
+                    f"n_components={manifold_dim}, "
+                    f"n_neighbors={manifold.n_neighbors if hasattr(manifold, 'n_neighbors') else 'N/A'}")
 
     # Save columns category
     inferred_columns_dictionary = {}
