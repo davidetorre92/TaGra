@@ -11,3 +11,6 @@ results/
 # Ignore datasets and tests
 dataset/
 tests/
+
+# Ignore test bash script
+test.sh
