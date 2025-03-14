@@ -138,21 +138,48 @@ The settings can be specified in a configuration file. It must be a JSON file th
 - `graph_visualization_filename`: Path to the file where the graph visualization will be saved. If null, the graph will not be plotted.
 - `prob_heatmap_filename`: Filename of the heatmap containing the statistics on the neighbors.
 - `overwrite`: A flag indicating whether to overwrite the results of experiments or not. If set to False, all output filenames are equipped with a timestamp, otherwise outputs are overwritten.
-## Data Preprocessing
+# TaGra API Reference
+
+## Core API Components
+### 1. Data Preprocessing
 
 ```python
-from tagra.preprocessing import preprocess_dataframe
+from tagra import preprocessing
 
-# Example usage
+# Process data with all configuration options
+preprocessed_df, manifold_positions = preprocessing.preprocess_dataframe(
+    input_dataframe="path/to/dataset.csv",    # Path to file or pandas DataFrame
+    output_directory="results/",              # Where to save outputs
+    preprocessed_filename=None,               # Custom filename for processed data
+    inferred_columns_filename=None,           # Save column types in pickle file
+    numeric_columns=[],                       # Columns to treat as numeric
+    categorical_columns=[],                   # Columns to treat as categorical
+    target_columns=["target"],                # Target variable(s) for analysis
+    unknown_column_action='infer',            # How to handle unspecified columns
+    ignore_columns=[],                        # Columns to exclude from processing
+    numeric_threshold=0.05,                   # Threshold for numeric inference
+    numeric_scaling='standard',               # 'standard' or 'minmax' scaling
+    categorical_encoding='one-hot',           # 'one-hot' or 'label' encoding
+    nan_action='infer',                       # How to handle missing values
+    nan_threshold=0.5,                        # Threshold for column removal
+    verbose=True,                             # Print processing details
+    manifold_method=None,                     # 'Isomap', 'TSNE', or 'UMAP' 
+    manifold_dim=2,                           # Dimensions for manifold learning
+    overwrite=False                           # Overwrite existing files
+)
 
-df_preprocessed = preprocess_dataframe(
-    input_dataframe='moons.csv',
-    inferred_columns_filename = 'inferred_columns_moon.pickle'
+# Minimal usage with auto-inference
+preprocessed_df, _ = preprocessing.preprocess_dataframe(
+    input_dataframe="path/to/dataset.csv",
+    target_columns=["target"]
 )
 
 ```
 
-It will produce a preprocessed dataframe of moons.csv in the results/ directory with name moons_{timestap}.csv, where time stamp is a string in the format ‘%Y%m%d%H%M’ with the current time.
+Returns:
+
+- ```preprocessed_df```: Processed pandas DataFrame with encoded/scaled features
+- ```manifold_positions```: Coordinates from manifold learning (if applied) for visualization
 
 ### List of optional arguments and their default values
 ```python
@@ -175,19 +202,42 @@ manifold_dim = None,
 overwrite = False
 ```
 
-## Graph construction
-from tagra.graph import construct_graph
+## 2.Graph Creation Module
 
-### Example usage
 ```python
-graph = construct_graph(
-    input_dataframe='moons.csv',
-    preprocessed_dataframe = df_processed # The output of preprocess_dataframe.
-    inferred_columns_filename = 'inferred_columns_moon.pickle'
+from tagra import graph
+
+# Create a graph with default KNN method
+G = graph.create_graph(
+    preprocessed_dataframe="path/to/preprocessed.csv",  # Processed data from preprocessing step
+    output_directory="results/",                        # Where to save the graph
+    method="knn",                                       # Graph creation method
+    k=5                                                 # Number of neighbors for KNN
+)
+
+# Create a distance-based graph
+G = graph.create_graph(
+    input_dataframe="dataset.csv",                     # Raw input data
+    numeric_columns=["feature1", "feature2"],          # Columns to use for graph building
+    output_directory="results/",
+    method="distance",                                 # Use distance threshold method
+    distance_threshold=0.5,                            # Maximum distance for edge creation
+    graph_filename="distance_graph.graphml"            # Custom filename
+)
+
+# Create a similarity-based graph
+G = graph.create_graph(
+    preprocessed_dataframe=df_preprocessed,            # Pass DataFrame directly
+    method="similarity",                               # Use similarity threshold method
+    similarity_threshold=0.7,                          # Minimum similarity for edge creation
+    verbose=True                                       # Print detailed progress
 )
 ```
-This example uses the `construct_graph` function to generate a graph with the distances from the preprocessed DataFrame `df_preprocessed` derived from 'moons.csv' and the inferred columns dictionary from `inferred_columns_filename`. `moons.csv` will be used to add the features to the nodes. The name of the graph will be `graph_{timestamp}.graph`.
-This function returns an igraph object.
+Returns a NetworkX graph object with:
+- Nodes representing data points
+- Node attributes containing original data values
+- Edges representing relationships based on the chosen method
+
 
 ### List of optional arguments and their default values
 ```python
@@ -203,30 +253,63 @@ similarity_threshold=None,
 verbose=True,
 overwrite=False
 ```
-## Graph Analysis
+## 3. Graph Analysis Module
 
-Simple graph analysis.
-
-### Example usage
 ```python
-from tagra.analysis import analyze_graph
+from tagra import analysis
 
-config = load_config(path_to_config)
-if config['manifold_method'] is not None:
-    pos = manifold_pos
-else:
-    pos = None
-
-# Example usage
-results = analyze_graph(
-    graph, # The output of construct_graph.
-    target_attributes='class',
-    pos = pos
+# Analyze graph with all visualization outputs
+analysis.analyze_graph(
+    graph="path/to/graph.graphml",                   # Path to saved graph or NetworkX graph object
+    target_attributes="target_column",               # Target variable for coloring and analysis
+    verbose=True,                                    # Print analysis details
+    pos=None,                                        # Optional node positions for visualization
+    output_directory="results/",                     # Where to save analysis outputs
+    neigh_prob_filename="neigh_prob.txt",            # Save neighborhood probabilities as text
+    degree_distribution_filename="degree.png",       # Save degree distribution plot
+    prob_heatmap_filename="prob_heatmap.png",        # Save probability heatmap visualization
+    community_filename="communities.png",            # Save community composition histogram
+    graph_visualization_filename="graph.png",        # Save graph visualization
+    overwrite=False                                  # Whether to overwrite existing files
 )
 
+# Basic usage with a NetworkX graph
+import networkx as nx
+G = nx.Graph()  # A graph from previous steps
+analysis.analyze_graph(G, target_attributes="class")
+
+# Use node positions from manifold learning
+from tagra import preprocessing
+df, manifold_positions = preprocessing.preprocess_dataframe(
+    input_dataframe="data.csv", 
+    manifold_method="Isomap"
+)
+analysis.analyze_graph(
+    graph=G,
+    pos=manifold_positions,  # Use positions from manifold learning
+    graph_visualization_filename="manifold_graph.png"
+)
 ```
-`graph` will be analized and the a basic analysis on the graph will be performed. `pos` will be used for the visualization.
- 
+**Generated outputs**:
+
+- Neighborhood analysis: Probability matrix showing the likelihood of finding neighbors with different target attributes
+
+- Text output with P(j|i) values indicating probability of neighbors having class j given node class i
+Heatmap visualization where diagonal elements approaching 1 indicate strong class separation
+
+- Degree distribution plot: Log-log plot showing the number of connections per node. Helps identify potential outliers (nodes with few connections)
+Reveals central nodes (nodes with many connections)
+
+- Community composition visualization: Histogram showing how target attributes are distributed across detected communities. Uses the Girvan-Newman algorithm for community detection
+Bars colored according to the class distribution within each community
+
+- Graph visualization: 2D visualization of the graph with nodes colored by target attribute
+
+- Uses manifold learning coordinates or force-directed layout
+Reveals clusters, isolated nodes, and connectivity patterns
+
+
+
 
 ### List of optional arguments and their default values
 ```python
