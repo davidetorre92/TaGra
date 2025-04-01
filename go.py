@@ -67,7 +67,8 @@ def main(config_path, dataset_path, target_class):
         graph_visualization_filename=config['graph_visualization_filename'],
         prob_heatmap_filename=config['prob_heatmap_filename'],
         pos=pos,
-        overwrite=config['overwrite']
+        overwrite=config['overwrite'],
+        network_metrics_filename=config['network_metrics_filename']
     )
 
     end_time = datetime.now()

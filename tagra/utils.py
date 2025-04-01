@@ -68,7 +68,7 @@ def print_neighbors_prob(df_neigh, label_col):
 
     return probabilities
 
-def heat_map_prob(probabilities, df_neigh, label_col, prob_heatmap_path):
+def heat_map_prob(probabilities, df_neigh, label_col, prob_heatmap_path, verbose):
 
     # Convert labels to string for better handling
     labels = sorted([str(label) for label in df_neigh[f'node_{label_col}'].unique()])
@@ -101,9 +101,9 @@ def heat_map_prob(probabilities, df_neigh, label_col, prob_heatmap_path):
     plt.ylabel('Label i')
     if prob_heatmap_path:
         plt.savefig(prob_heatmap_path, dpi = 300)
-        print(f"{datetime.datetime.now()}: Neighbour probability data saved in {prob_heatmap_path}")
+        if verbose: print(f"{datetime.datetime.now()}: Probability heatmap saved in {prob_heatmap_path}")
 
-def plot_distribution(data_dict, outpath, bins = None, double_log = True):
+def plot_distribution(data_dict, outpath, verbose, bins = None, double_log = True):
     data = data_dict['data']
     if bins is None:
         bins = range(0, max(data))
@@ -122,13 +122,13 @@ def plot_distribution(data_dict, outpath, bins = None, double_log = True):
     fig.tight_layout()
     if outpath:
         fig.savefig(outpath, dpi = 300)
-        print(f"{datetime.datetime.now()}: {data_dict['title']} saved in {outpath}")
+        if verbose: print(f"{datetime.datetime.now()}: {data_dict['title']} saved in {outpath}")
 
-def plot_community_composition(G, attribute_name, outpath, palette = 'seismic'):
+def plot_community_composition(G, attribute_name, communities, outpath, verbose, palette = 'seismic'):
     NONE_STR = 'None'
-    communities_generator = nx.algorithms.community.girvan_newman(G)
-    top_level_communities = next(communities_generator)
-    communities = [list(c) for c in sorted(top_level_communities, key=len, reverse=True)]
+    # communities_generator = nx.algorithms.community.girvan_newman(G)
+    # top_level_communities = next(communities_generator)
+    # communities = [list(c) for c in sorted(top_level_communities, key=len, reverse=True)]
     if attribute_name is not None:
         labels_per_node = [G.nodes[n].get(attribute_name, NONE_STR) for n in G.nodes]
         unique_labels = set(labels_per_node)
@@ -184,10 +184,10 @@ def plot_community_composition(G, attribute_name, outpath, palette = 'seismic'):
     if outpath:
         fig.tight_layout()
         fig.savefig(outpath, dpi = 300)
-        print(f"{datetime.datetime.now()}: Community composition saved in {outpath}")
+        if verbose: print(f"{datetime.datetime.now()}: Community composition saved in {outpath}")
     
     return 1
-def matplotlib_graph_visualization(G, attribute = None, outpath = None, palette = 'seismic', pos = None):
+def matplotlib_graph_visualization(G, attribute, outpath, verbose, palette = 'seismic', pos = None):
     NONE_STR = 'None'
     plt.figure(figsize=(10, 10))
     if pos is None:
@@ -213,7 +213,7 @@ def matplotlib_graph_visualization(G, attribute = None, outpath = None, palette 
     plt.title(title_string)
     if outpath:
         plt.savefig(outpath, dpi = 300)
-        print(f'{datetime.datetime.now()}: Graph saved in {outpath}')
+        if verbose: print(f'{datetime.datetime.now()}: Graph saved in {outpath}')
 
 def measure_mixing_matrix(G, communities):
     community_edge_count = {(i, j): 0 for i in communities.keys() for j in communities.keys()}

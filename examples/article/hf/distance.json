@@ -14,7 +14,7 @@
     "categorical_encoding": "one-hot",
     "nan_action": "drop row",
     "nan_threshold": null,
-    "manifold_method": "Isomap",
+    "manifold_method": "UMAP",
     "method": "distance",
     "distance_threshold": 3.0,
     "neigh_prob_path": "neigh_prob_distance.txt",

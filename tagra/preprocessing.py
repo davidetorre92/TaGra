@@ -20,8 +20,8 @@ def preprocess_dataframe(input_dataframe=None,
                          nan_action='infer', 
                          nan_threshold=0.5,
                          verbose=True, 
-                         manifold_method=None, 
-                         manifold_dim=None,
+                         manifold_method='UMAP', 
+                         manifold_dim=2,
                          overwrite=False):
 
     if verbose:

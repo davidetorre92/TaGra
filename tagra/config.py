@@ -17,7 +17,7 @@ default_config = {
     "nan_action": "infer",
     "nan_threshold": 0,
     "verbose": True,
-    "manifold_method": 'Isomap',
+    "manifold_method": 'UMAP',
     "method": "knn",
     "k": 5,
     "distance_threshold": None,
@@ -27,6 +27,7 @@ default_config = {
     "community_filename": "communities.png",
     "graph_visualization_filename": "graph.png",
     "prob_heatmap_filename": "neigh_prob_heatmap.png",
+    "network_metrics_filename": None,
     "overwrite": False
 }
 
