@@ -324,6 +324,8 @@ community_filename = None,
 graph_visualization_filename = None,
 overwrite = False
 ```
+# Reference
+Davide Torre, Davide Chicco, "TaGra: an open Python package for easily generating graphs from data tables through manifold learning", PeerJ Computer Science 11:e2986, 2025. https://doi.org/10.7717/peerj-cs.2986
 
 # Contributing
 We welcome contributions from the community. If you would like to contribute, please read our Contributing Guide for more information on how to get started.
