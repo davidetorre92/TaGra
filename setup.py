@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='TaGra',
-    version='0.2.3',
+    version='0.2.4',
     packages=find_packages(),
     install_requires=[
         'numpy',
@@ -18,7 +18,7 @@ setup(
         ],
     },
     author='Davide Torre, Davide Chicco',
-    author_email='davidetorre92@gmail.com',
+    author_email='d.torre@iac.cnr.it',
     description='TaGra: TAbular data preprocessing to GRAph representation.',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
